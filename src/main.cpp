@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include "RGB.h"
 #include "app/app.h"
-#include "usb_cdc.h"
 #include "hal/hal.h"
 #include "hal/nvs.h"
 #include "web/WiFiAsyncWebServer.h"
