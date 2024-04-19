@@ -1,10 +1,10 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define SCLK 12
-#define MOSI 11
+#define TFT_SCLK 12
+#define TFT_MOSI 11
 #define TFT_CS 10
-#define TFT_BLK 13
+#define TFT_BLK 21
 #define TFT_DC 14
 #define TFT_RST 9
 
@@ -33,5 +33,14 @@
 #define LCD_BK_DEFAULT_BRIGHTNESS  50
 #define LCD_BK_DEFAULT_TIMEOUT     5
 
+
+/* Buzzer */
+#define CONFIG_BUZZ_PIN             18
+#define CONFIG_BUZZ_CHANNEL         2
+#define CONFIG_SOUND_ENABLE_DEFAULT false  
+
+
+/* LED */
+#define CONFIG_SYSTEM_LED_PIN             17
 
 #endif 

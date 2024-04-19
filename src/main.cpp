@@ -26,7 +26,7 @@ void setup() {
     HAL::Init();
     nvs_init();
     ffat_init();
-    strip_init();
+    // strip_init();
     // HWSerial.begin(115200);
     display_init();
     App_Init();
@@ -36,7 +36,7 @@ void setup() {
 void loop() {
     unsigned long currentMillis = millis();
 
-    strip_start(currentMillis);
+    // strip_start(currentMillis);
 
     HAL::Update();
     // delay(10);

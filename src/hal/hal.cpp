@@ -13,16 +13,21 @@ void HAL::Init()
     disp_draw_buf = static_cast<lv_color_t*>(malloc(DISP_BUF_SIZE * sizeof(lv_color_t)));
     if (disp_draw_buf == nullptr)
         Serial.printf("lv_port_disp_init malloc failed!\n");
-    power_init();
-    motor_init();
-
-    knob_init();
+    // power_init();
+    // motor_init();
+    system_led_init();
+    buzz_init();
+    buzz_tone(700, 30);
+    // knob_init();
     // super_dial_init();
 }
 
 
 void HAL::Update()
 {
-    __IntervalExecute(HAL::knob_update(), 10);
+    unsigned long currentMillis = millis();
+    // __IntervalExecute(HAL::knob_update(), 10);
+
+    system_led_run(currentMillis);
     // HAL::TaskMotorUpdate(NULL);
 }

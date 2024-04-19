@@ -53,6 +53,14 @@ namespace HAL
 
     void lcd_brightness_init();
     void set_lcd_brightness(int value);
+
+    void buzz_set_enable(bool en);
+    void buzz_init(void);
+    void buzz_tone(uint32_t _freq, int32_t _duration);
+
+    void system_led_init(void);
+    void system_led_run(unsigned long currentMillis);
+
 }
 
 
