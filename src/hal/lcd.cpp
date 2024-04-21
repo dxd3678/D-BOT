@@ -56,8 +56,8 @@ int onMotorEvent(Account* account, Account::EventParam_t* param)
 
 void HAL::lcd_brightness_init() 
 {
-    ledcSetup(0, 5000, 10);      //通道0， 5KHz，10位解析度
-    ledcAttachPin(TFT_BLK, 0);  //pin25定义为通道0的输出引脚
+    ledcSetup(CONFIG_TFT_BLK_CHANNEL, 5000, 10);      //通道0， 5KHz，10位解析度
+    ledcAttachPin(TFT_BLK, CONFIG_TFT_BLK_CHANNEL);  
     account = new Account("LcdBrightness", AccountSystem::Broker(), 0, NULL);
     account->SetEventCallback(onMotorEvent);
     account->Subscribe("MotorStatus");

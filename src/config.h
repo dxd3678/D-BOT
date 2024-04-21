@@ -7,6 +7,7 @@
 #define TFT_BLK 21
 #define TFT_DC 14
 #define TFT_RST 9
+#define CONFIG_TFT_BLK_CHANNEL     0
 
 #define MO1 17
 #define MO2 16

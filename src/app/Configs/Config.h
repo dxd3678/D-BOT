@@ -54,10 +54,6 @@
 #define CONFIG_BAT_DET_PIN          37
 #define CONFIG_BAT_CHG_DET_PIN      38
 
-/* Buzzer */
-#define CONFIG_BUZZ_PIN             27
-#define CONFIG_BUZZ_CHANNEL         2
-#define CONFIG_SOUND_ENABLE_DEFAULT false
 
 /* IMU */
 #define CONFIG_IMU_INT1_PIN         32
