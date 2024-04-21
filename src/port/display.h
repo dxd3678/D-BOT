@@ -9,8 +9,8 @@ typedef Arduino_GC9A01 SCREEN_CLASS;
 void Port_Init();
 void DisplayFault_Init(SCREEN_CLASS* scr);
 void lv_port_disp_init(SCREEN_CLASS* scr);
-void lv_fs_if_init();
-void lv_port_indev_init();
+void lv_fs_fatfs_init(void);
+void lv_port_indev_init(void);
 
 extern TaskHandle_t handleTaskLvgl;
 #endif /* __DISPLAY_H__ */

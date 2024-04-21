@@ -27,6 +27,8 @@ static void disp_flush_cb(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t
 void my_print(lv_log_level_t level, const char* file, uint32_t line, const char* fun, const char* dsc)
 {
     // log_i("%s@%d %s->%s\r\n", file, line, fun);
+    // Serial.printf("%s@%d %s->%s\r\n", file, line, fun, dsc);
+	// Serial.flush();
 }
 
 

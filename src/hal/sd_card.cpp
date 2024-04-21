@@ -4,7 +4,7 @@
 void SdCard::init()
 {
     // SPIClass *sd_spi = new SPIClass(HSPI);  // another SPI
-    if (!SD.begin(CONFIG_SDCARD_SS_PIN, SPI)) {
+    if (!SD.begin(CONFIG_SDCARD_SS_PIN, SPI, 8000000U)) {
         Serial.println("Card Mount Failed");
         return;
     }

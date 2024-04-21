@@ -7,7 +7,8 @@
  *      INCLUDES
  *********************/
 #include "ff.h"
-#include "lvgl.h"
+#include <lvgl.h>
+
 
 /*********************
  *      DEFINES
@@ -49,7 +50,6 @@ static lv_fs_res_t fs_dir_close(lv_fs_drv_t *drv, void *dir_p);
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
-
 void lv_fs_fatfs_init(void)
 {
     /*----------------------------------------------------
@@ -111,7 +111,7 @@ static void *fs_open(lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode)
     else if (mode == (LV_FS_MODE_WR | LV_FS_MODE_RD))
         flags = FA_READ | FA_WRITE | FA_OPEN_ALWAYS;
 
-    FIL *f = lv_mem_alloc(sizeof(FIL));
+    FIL *f = (FIL *)lv_mem_alloc(sizeof(FIL));
     if (f == NULL) return NULL;
 
     FRESULT res = f_open(f, path, flags);
@@ -133,7 +133,7 @@ static void *fs_open(lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode)
 static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p)
 {
     LV_UNUSED(drv);
-    f_close(file_p);
+    f_close((FIL *)file_p);
     lv_mem_free(file_p);
     return LV_FS_RES_OK;
 }
@@ -151,7 +151,7 @@ static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p)
 static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t btr, uint32_t *br)
 {
     LV_UNUSED(drv);
-    FRESULT res = f_read(file_p, buf, btr, (UINT *)br);
+    FRESULT res = f_read((FIL *)file_p, buf, btr, (UINT *)br);
     if (res == FR_OK)
         return LV_FS_RES_OK;
     else
@@ -170,7 +170,7 @@ static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t b
 static lv_fs_res_t fs_write(lv_fs_drv_t *drv, void *file_p, const void *buf, uint32_t btw, uint32_t *bw)
 {
     LV_UNUSED(drv);
-    FRESULT res = f_write(file_p, buf, btw, (UINT *)bw);
+    FRESULT res = f_write((FIL *)file_p, buf, btw, (UINT *)bw);
     if (res == FR_OK)
         return LV_FS_RES_OK;
     else
@@ -191,13 +191,13 @@ static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos, lv_fs_w
     LV_UNUSED(drv);
     switch (whence) {
     case LV_FS_SEEK_SET:
-        f_lseek(file_p, pos);
+        f_lseek((FIL *)file_p, pos);
         break;
     case LV_FS_SEEK_CUR:
-        f_lseek(file_p, f_tell((file_t *)file_p) + pos);
+        f_lseek((FIL *)file_p, f_tell((file_t *)file_p) + pos);
         break;
     case LV_FS_SEEK_END:
-        f_lseek(file_p, f_size((file_t *)file_p) + pos);
+        f_lseek((FIL *)file_p, f_size((file_t *)file_p) + pos);
         break;
     default:
         break;
@@ -229,7 +229,7 @@ static lv_fs_res_t fs_tell(lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p)
 static void *fs_dir_open(lv_fs_drv_t *drv, const char *path)
 {
     LV_UNUSED(drv);
-    FF_DIR *d = lv_mem_alloc(sizeof(FF_DIR));
+    FF_DIR *d = (FF_DIR*)lv_mem_alloc(sizeof(FF_DIR));
     if (d == NULL) return NULL;
 
     FRESULT res = f_opendir(d, path);
@@ -256,7 +256,7 @@ static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *dir_p, char *fn)
     fn[0] = '\0';
 
     do {
-        res = f_readdir(dir_p, &fno);
+        res = f_readdir((FF_DIR*)dir_p, &fno);
         if (res != FR_OK) return LV_FS_RES_UNKNOWN;
 
         if (fno.fattrib & AM_DIR) {
@@ -279,7 +279,7 @@ static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *dir_p, char *fn)
 static lv_fs_res_t fs_dir_close(lv_fs_drv_t *drv, void *dir_p)
 {
     LV_UNUSED(drv);
-    f_closedir(dir_p);
-    lv_mem_free(dir_p);
+    f_closedir((FF_DIR*)dir_p);
+    lv_mem_free((FF_DIR*)dir_p);
     return LV_FS_RES_OK;
 }
