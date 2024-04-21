@@ -44,4 +44,8 @@
 /* LED */
 #define CONFIG_SYSTEM_LED_PIN             17
 
+/* SD Card */
+#define CONFIG_SDCARD_SS_PIN             47
+
+
 #endif 

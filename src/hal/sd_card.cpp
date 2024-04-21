@@ -1,18 +1,17 @@
 #include "sd_card.h"
+#include "config.h"
 
 void SdCard::init()
 {
-    SPIClass *sd_spi = new SPIClass(HSPI);  // another SPI
-
-    // SD-Card SS pin is 15
-    if (!SD.begin(15, *sd_spi)) {
+    // SPIClass *sd_spi = new SPIClass(HSPI);  // another SPI
+    if (!SD.begin(CONFIG_SDCARD_SS_PIN, SPI)) {
         Serial.println("Card Mount Failed");
         return;
     }
     uint8_t cardType = SD.cardType();
 
     if (cardType == CARD_NONE) {
-        Serial.println("No SD card attached");
+        log_e("No SD card attached");
         return;
     }
 
@@ -28,7 +27,7 @@ void SdCard::init()
     }
 
     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-    Serial.printf("SD Card Size: %lluMB\n", cardSize);
+    log_i("SD Card Size: %lluMB\n", cardSize);
 }
 
 void SdCard::listDir(const char *dirname, uint8_t levels)

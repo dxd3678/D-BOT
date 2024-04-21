@@ -1,9 +1,12 @@
 
 #include "hal.h"
 #include "lvgl.h"
+#include "sd_card.h"
+
 #define DISP_BUF_SIZE        CONFIG_SCREEN_BUFFER_SIZE
 
 extern lv_color_t* disp_draw_buf;
+SdCard tf;
 
 void HAL::Init()
 {
@@ -18,6 +21,9 @@ void HAL::Init()
     system_led_init();
     buzz_init();
     buzz_tone(700, 30);
+    tf.init();
+    String test_content = tf.readFileLine("/dingmos_test.txt", 1);        // line-1 for WiFi ssid
+    log_i("read test file: %s", test_content.c_str());
     // knob_init();
     // super_dial_init();
 }
