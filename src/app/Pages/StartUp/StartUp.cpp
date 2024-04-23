@@ -63,7 +63,6 @@ void Startup::onViewDidUnload()
 
 void Startup::onTimer(lv_timer_t* timer)
 {
-    Serial.printf("\n StartUp on timer\n");
     Startup* instance = (Startup*)timer->user_data;
 
     instance->Manager->Push("Pages/Template");

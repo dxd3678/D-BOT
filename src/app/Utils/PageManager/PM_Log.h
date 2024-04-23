@@ -32,9 +32,10 @@
 #  define PM_LOG_ERROR(format, ...) printf("\r\nPM ERROR: "),printf(format, ##__VA_ARGS__)
 #else
 #include <Arduino.h>
-#  define PM_LOG_INFO(format, ...)  Serial.printf("\r\nPM INFO: "),Serial.printf(format, ##__VA_ARGS__)
-#  define PM_LOG_WARN(format, ...)  Serial.printf("\r\nPM WARN: "),Serial.printf(format, ##__VA_ARGS__)
-#  define PM_LOG_ERROR(format, ...) Serial.printf("\r\nPM ERROR: "),Serial.printf(format, ##__VA_ARGS__)
+#include "lvgl.h"
+#  define PM_LOG_INFO(format, ...)  LV_LOG_INFO(format, ##__VA_ARGS__)
+#  define PM_LOG_WARN(format, ...)  LV_LOG_WARN(format, ##__VA_ARGS__)
+#  define PM_LOG_ERROR(format, ...) LV_LOG_ERROR(format, ##__VA_ARGS__)
 #endif
 
 

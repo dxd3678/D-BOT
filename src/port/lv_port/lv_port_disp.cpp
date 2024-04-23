@@ -10,6 +10,7 @@ static uint32_t screenWidth;
 static uint32_t screenHeight;
 static lv_disp_draw_buf_t draw_buf;
 lv_color_t *disp_draw_buf;
+lv_color_t* disp_draw_buf_1 = NULL;
 static lv_disp_drv_t disp_drv;
 uint8_t lv_page = 0;
 
@@ -24,11 +25,12 @@ static void disp_flush_cb(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t
     lv_disp_flush_ready(disp);
 }
 
-void my_print(lv_log_level_t level, const char* file, uint32_t line, const char* fun, const char* dsc)
+void my_print(const char *buf)
 {
     // log_i("%s@%d %s->%s\r\n", file, line, fun);
     // Serial.printf("%s@%d %s->%s\r\n", file, line, fun, dsc);
 	// Serial.flush();
+    Serial.printf("%s", buf);
 }
 
 
@@ -44,13 +46,14 @@ void lv_port_disp_init(SCREEN_CLASS* scr) {
     // if (!disp_draw_buf) {
     //     LV_LOG_WARN("LVGL disp_draw_buf allocate failed!");
     // }
-    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf, NULL, DISP_BUF_SIZE);
+    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf, disp_draw_buf_1, DISP_BUF_SIZE);
 
     /* Initialize the display */
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = screenWidth;
     disp_drv.ver_res = screenHeight;
     disp_drv.flush_cb = disp_flush_cb;
+    // disp_drv.full_refresh = 1;
     disp_drv.draw_buf = &draw_buf;
     disp_drv.user_data = scr;
     lv_disp_drv_register(&disp_drv);
