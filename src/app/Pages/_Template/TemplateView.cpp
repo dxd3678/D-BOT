@@ -18,8 +18,8 @@ void TemplateView::Create(lv_obj_t* root)
 	
 
 	lv_obj_t* img = lv_img_create(root);
-	lv_img_set_src(img, Resource.GetImage("macos"));
-	// lv_img_set_src(img, "S:/wink0001.bin");
+	// lv_img_set_src(img, Resource.GetImage("macos"));
+	lv_img_set_src(img, "S:/emoji/wink/wink0001.bin");
 	lv_obj_center(img);
 	ui.canvas = img;
 
@@ -53,10 +53,10 @@ lv_img_dsc_t img_emoji = {
 
 
 const char *g_emoji_name[] = {
-	// "wink",
-	"angry_in",
-	"angry_loop",
-	"angry_out",
+	"wink",
+	// "angry_in",
+	// "angry_loop",
+	// "angry_out",
 	"max"
 };
 
