@@ -9,13 +9,21 @@
 #define TFT_RST 9
 #define CONFIG_TFT_BLK_CHANNEL     0
 
-#define MO1 17
-#define MO2 16
-#define MO3 15
+#define MO0_1 GPIO_NUM_4
+#define MO0_2 GPIO_NUM_5
+#define MO0_3 GPIO_NUM_6
+#define MT6701_SS_0 GPIO_NUM_42
+
+#define MO_EN GPIO_NUM_8
+
+#define MO1_1 GPIO_NUM_7
+#define MO1_2 GPIO_NUM_15
+#define MO1_3 GPIO_NUM_16
+
+#define MT6701_SS_1 GPIO_NUM_41
 
 #define MT6701_SDA 1
 #define MT6701_SCL 2
-#define MT6701_SS 42
 
 #define CONFIG_SCREEN_HOR_RES       240
 #define CONFIG_SCREEN_VER_RES       240

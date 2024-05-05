@@ -7,7 +7,7 @@ static const int spiClk = 1000000; // 400KHz
 SPIClass* hspi = NULL;
 
 BLDCMotor motor = BLDCMotor(7);
-BLDCDriver3PWM driver = BLDCDriver3PWM(MO1, MO2, MO3);
+BLDCDriver3PWM driver = BLDCDriver3PWM(MO0_1, MO0_2, MO0_3);
 //目标变量
 float target_velocity = 0;
 
@@ -170,7 +170,7 @@ static float readMySensorCallback(void) {
 }
 static void initMySensorCallback(void) {
     hspi = new SPIClass(HSPI);
-    hspi->begin(MT6701_SCL, MT6701_SDA, -1, MT6701_SS); //SCLK, MISO, MOSI, SS
+    hspi->begin(MT6701_SCL, MT6701_SDA, -1, MT6701_SS_0); //SCLK, MISO, MOSI, SS
     pinMode(hspi->pinSS(), OUTPUT); //HSPI SS
 }
 
@@ -340,6 +340,14 @@ void TaskMotorUpdate(void *pvParameters)
 
 void HAL::motor_init(void)
 {
+
+    log_i("Motor starting...");
+    pinMode(MT6701_SS_1, OUTPUT);
+    digitalWrite(MT6701_SS_1, HIGH);  
+    // init_motor(&motor_1, &driver_1, &sensor_1);
+    vTaskDelay(100);
+    pinMode(MO_EN, OUTPUT);
+    digitalWrite(MO_EN, HIGH);  
     // update_motor_status(MOTOR_INIT);
     // initialize sensor hardware
     sensor.init();

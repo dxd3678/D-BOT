@@ -17,7 +17,7 @@ void HAL::Init()
     if (disp_draw_buf == nullptr)
         Serial.printf("lv_port_disp_init malloc failed!\n");
     // power_init();
-    // motor_init();
+    motor_init();
     system_led_init();
     buzz_init();
     buzz_tone(700, 30);
