@@ -22,11 +22,11 @@ static int onEvent(Account* account, Account::EventParam_t* param)
     {
     case MOTOR_CMD_CHANGE_MODE:
         /* code */
-        HAL::update_motor_mode(info->motor_mode, info->init_position);
-        HAL::motor_shake(2, 2);
+        HAL::update_motor_mode(info->motor_num, info->motor_mode, info->init_position);
+        HAL::motor_shake(info->motor_num, 2, 2);
         break;
     case MOTOR_CMD_CHECKOUT_PAGE:
-        HAL::motor_shake(2, 2);
+        HAL::motor_shake(info->motor_num, 2, 2);
         break;
     default:
         break;

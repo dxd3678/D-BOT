@@ -15,3 +15,10 @@ python lv_img_conv.py -f true_color_alpha -cf RGB565SWAP -ff BIN -o $image_path/
 # 快速重命名
 counter=1; for file in wink*; do new_name=$(printf "wink%04d.bin" $counter); mv $file $new_name; ((counter++)); done
 ```
+
+esp32 debug
+
+```bash
+export PATH=$PATH:~/.platformio/packages/toolchain-xtensa-esp32s3/bin
+xtensa-esp32s3-elf-addr2line.exe -pfiaC -e .pio/build/esp32-s3-devkitc-1/firmware.elf 0x42007e97
+```
