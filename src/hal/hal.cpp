@@ -12,10 +12,6 @@ void HAL::Init()
 {
     Serial.begin(115200);
 
-    Serial.printf("Deafult free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
-    Serial.printf("PSRAM free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-    Serial.printf("Flash size: %d bytes\n", ESP.getFlashChipSize());
-
     // Move the malloc process to Init() to make sure that the largest heap can be used for this buffer.
     disp_draw_buf = static_cast<lv_color_t*>(malloc(DISP_BUF_SIZE * sizeof(lv_color_t)));
     if (disp_draw_buf == nullptr)
