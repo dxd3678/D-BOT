@@ -34,7 +34,7 @@ typedef struct
     float roll;
     float yaw;
     float pitch;
-} IMU_Info_t;
+} imu_info_t;
 
 /* Power */
 typedef struct

@@ -55,5 +55,8 @@
 /* SD Card */
 #define CONFIG_SDCARD_SS_PIN             47
 
+/* MPU */
+#define CONFIG_MPU_SDA                39
+#define CONFIG_MPU_SCL                38
 
 #endif 

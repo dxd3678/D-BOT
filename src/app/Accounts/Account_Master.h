@@ -14,7 +14,7 @@ namespace AccountSystem
 
 AccountBroker* Broker();
 
-void IMU_Commit(HAL::IMU_Info_t* info);
+void imu_commit(HAL::imu_info_t* info);
 }
 
 #endif

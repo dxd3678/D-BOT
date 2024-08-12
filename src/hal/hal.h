@@ -61,6 +61,10 @@ namespace HAL
     void system_led_init(void);
     void system_led_run(unsigned long currentMillis);
 
+    void  imu_init(void);
+    void  imu_update(void);
+    float imu_get_yaw(void);
+
 }
 
 

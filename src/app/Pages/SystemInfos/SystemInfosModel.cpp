@@ -26,7 +26,7 @@ void SystemInfosModel::GetIMUInfo(
     char* info, uint32_t len
 )
 {
-    HAL::IMU_Info_t imu;
+    HAL::imu_info_t imu;
     account->Pull("IMU", &imu, sizeof(imu));
     snprintf(
         info,

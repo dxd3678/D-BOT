@@ -28,6 +28,9 @@ void HAL::Init()
     tf.init();
     String test_content = tf.readFileLine("/dingmos_test.txt", 1);        // line-1 for WiFi ssid
     log_i("read test file: %s", test_content.c_str());
+
+    log_i("init mpu...");
+    imu_init();
     // knob_init();
     // super_dial_init();
 }
@@ -39,5 +42,6 @@ void HAL::Update()
     // __IntervalExecute(HAL::knob_update(), 10);
 
     system_led_run(currentMillis);
+    imu_update();
     // HAL::TaskMotorUpdate(NULL);
 }
