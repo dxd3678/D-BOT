@@ -91,7 +91,7 @@ void Template::Update()
 
 	// lv_label_set_text_fmt(View.ui.labelTick, "tick = %d save = %d", Model.GetData(), Model.TickSave);
 	
-	View.update_emoji(emoji_buffer);
+	// View.update_emoji(emoji_buffer);
 }
 
 void Template::onTimerUpdate(lv_timer_t* timer)

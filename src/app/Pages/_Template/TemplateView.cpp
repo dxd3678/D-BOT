@@ -87,7 +87,7 @@ void TemplateView::update_emoji(unsigned char *buf)
 	// LV_LOG_INFO("open file %s", filename);
 	lv_res = lv_fs_open(&lv_emoji, filename , LV_FS_MODE_RD);
 	if(lv_res != LV_FS_RES_OK) {
-		LV_LOG_ERROR("open file %s failed", filename);
+		// LV_LOG_ERROR("open file %s failed", filename);
 		pcnt = 1;
 		emoji_index++;
 		return;
