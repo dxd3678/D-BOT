@@ -4,6 +4,7 @@
 #include "config.h"
 
 static volatile int16_t EncoderDiff = 0;
+static bool knob_inited = false;
 
 static ButtonEvent EncoderPush(2000);
 
@@ -12,19 +13,10 @@ static ButtonEvent EncoderPush(2000);
 */ 
 bool HAL::encoder_is_pushed(void)
 {
-    // static int press_cnt = 0;
-    // bool is_pushed = false;
-    // if (digitalRead(PUSH_BUTTON_PIN) == LOW) {
-    //     press_cnt++;
-    //     if (press_cnt > 3) { // 10ms
-    //         if( digitalRead(PUSH_BUTTON_PIN) == LOW){
-    //             return true;
-    //         }
-    //     }
-    // } else {
-    //     press_cnt = 0;
-    // }
-    // return false;
+    if (!knob_inited) {
+        return false;
+    }
+
     if (digitalRead(PUSH_BUTTON_PIN) == LOW) {
         // Serial.printf("Push button Pressed\n");
         return true;
@@ -64,6 +56,7 @@ void HAL::knob_init(void)
 {
     pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
     EncoderPush.EventAttach(Encoder_PushHandler);
+    knob_inited = true;
     // attachInterrupt(CONFIG_ENCODER_A_PIN, Encoder_A_IrqHandler, CHANGE);
     // push_button.EventAttach(button_handler);
 

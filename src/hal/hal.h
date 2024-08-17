@@ -30,7 +30,7 @@ namespace HAL
 
     void motor_init(void);
     // void TaskMotorUpdate(void *pvParameters);
-    int get_motor_position(void);
+    int get_motor_position(int id);
     void update_motor_mode(int id, int mode , int init_position);
     void motor_shake(int id, int strength, int delay_time);
 

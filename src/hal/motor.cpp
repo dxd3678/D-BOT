@@ -16,6 +16,8 @@ float target_velocity = 0;
 
 Account* actMotorStatus;
 
+#define MAX_MOTOR_NUM      2
+
 static XKnobConfig x_knob_configs[] = {
     // int32_t num_positions;        
     // int32_t position;             
@@ -118,13 +120,24 @@ static XKnobConfig x_knob_configs[] = {
 
 };
 
-XKnobConfig motor_config = {
+XKnobConfig motor_config[MAX_MOTOR_NUM] = {
+    {
     .num_positions = 0,
     .position = 0,
     .position_width_radians = 8.225806452 * _PI / 180,
     .detent_strength_unit = 2.3,
     .endstop_strength_unit = 1,
     .snap_point = 1.1,
+    }, 
+
+    {
+    .num_positions = 0,
+    .position = 0,
+    .position_width_radians = 8.225806452 * _PI / 180,
+    .detent_strength_unit = 2.3,
+    .endstop_strength_unit = 1,
+    .snap_point = 1.1,
+    }, 
 };
 
 // 死区制动百分率
@@ -151,8 +164,7 @@ struct motor_stat {
     float angle_to_detent_center;   // 电机角度到当前位置的偏差
 };
 
-#define MAX_MOTOR_NUM      2
-struct motor_stat motor_s0, motor_s1;
+struct motor_stat motor_s[MAX_MOTOR_NUM];
 
 //  ------------monitor--------------------
 Commander commander = Commander(Serial, '\n', false);
@@ -257,9 +269,9 @@ void HAL::motor_shake(int id, int strength, int delay_time)
     }
 }
 
-int HAL::get_motor_position(void)
+int HAL::get_motor_position(int id)
 {
-    return motor_config.position;
+    return motor_config[id].position;
 }
 
 void HAL::update_motor_mode(int id, int mode , int init_position)
@@ -269,35 +281,36 @@ void HAL::update_motor_mode(int id, int mode , int init_position)
         log_e("get motor by id %d failed.", id);
         return;
     }
-    motor_config = x_knob_configs[mode];
-    motor_config.position = init_position;
+    motor_config[id] = x_knob_configs[mode];
+    motor_config[id].position = init_position;
 #if XK_INVERT_ROTATION
-    motor_s0.current_detent_center = -motor->shaft_angle;
+    motor_s[id].current_detent_center = -motor->shaft_angle;
 #else 
-    motor_s0.current_detent_center = motor.shaft_angle;
+    motor_s[id].current_detent_center = motor.shaft_angle;
 #endif
 }
 
-static void motor_status_publish(struct motor_stat *ms, bool is_outbound)
+static void motor_status_publish(struct motor_stat *ms, int id, bool is_outbound)
 {
     // position
     static int32_t last_position = 0;
 
-    if (is_outbound || motor_config.position != last_position) {
+    if (is_outbound || motor_config[id].position != last_position) {
         MotorStatusInfo info = {
             .is_outbound = is_outbound,
-            .position = motor_config.position,
+            .position = motor_config[id].position,
             .angle_offset = ms->angle_to_detent_center * 180 / PI,  // 转换为角度
         };
         actMotorStatus->Commit((const void*)&info, sizeof(MotorStatusInfo));
         actMotorStatus->Publish();
-        last_position = motor_config.position;
+        last_position = motor_config[id].position;
     }
     
 }
 
-static int run_knob_task(BLDCMotor *motor, struct motor_stat *ms)
+static int run_knob_task(BLDCMotor *motor, int id)
 {
+    struct motor_stat *ms = &motor_s[id];
     if (ms == NULL) {
         log_e("motor stats is null !");
         return -1;
@@ -327,36 +340,36 @@ static int run_knob_task(BLDCMotor *motor, struct motor_stat *ms)
 #endif 
     // 每一步都乘以了 snap_point 的值
 
-    if (ms->angle_to_detent_center > motor_config.position_width_radians * motor_config.snap_point 
-            && (motor_config.num_positions <= 0 || motor_config.position > 0)) {
-        ms->current_detent_center += motor_config.position_width_radians;
-        ms->angle_to_detent_center -= motor_config.position_width_radians;
+    if (ms->angle_to_detent_center > motor_config[id].position_width_radians * motor_config[id].snap_point 
+            && (motor_config[id].num_positions <= 0 || motor_config[id].position > 0)) {
+        ms->current_detent_center += motor_config[id].position_width_radians;
+        ms->angle_to_detent_center -= motor_config[id].position_width_radians;
         /*
             * 这里判断为正转， position 应该 ++，这里反了之后，
             * encoder 的逻辑也需要反一下
         */
-        motor_config.position--;   
+        motor_config[id].position--;   
     }
-    else if (ms->angle_to_detent_center < -motor_config.position_width_radians * motor_config.snap_point 
-                && (motor_config.num_positions <= 0 || motor_config.position < motor_config.num_positions - 1))
+    else if (ms->angle_to_detent_center < -motor_config[id].position_width_radians * motor_config[id].snap_point 
+                && (motor_config[id].num_positions <= 0 || motor_config[id].position < motor_config[id].num_positions - 1))
     {
-        ms->current_detent_center -= motor_config.position_width_radians;
-        ms->angle_to_detent_center += motor_config.position_width_radians;
-        motor_config.position++;
+        ms->current_detent_center -= motor_config[id].position_width_radians;
+        ms->angle_to_detent_center += motor_config[id].position_width_radians;
+        motor_config[id].position++;
     }
 
     // 死区调整
     float dead_zone_adjustment = CLAMP(
         ms->angle_to_detent_center,
-        fmaxf(-motor_config.position_width_radians * DEAD_ZONE_DETENT_PERCENT, -DEAD_ZONE_RAD),
-        fminf(motor_config.position_width_radians * DEAD_ZONE_DETENT_PERCENT, DEAD_ZONE_RAD));
+        fmaxf(-motor_config[id].position_width_radians * DEAD_ZONE_DETENT_PERCENT, -DEAD_ZONE_RAD),
+        fminf(motor_config[id].position_width_radians * DEAD_ZONE_DETENT_PERCENT, DEAD_ZONE_RAD));
 
     // 出界
-    bool out_of_bounds = motor_config.num_positions > 0 && 
-                ((ms->angle_to_detent_center > 0 && motor_config.position == 0) 
-                || (ms->angle_to_detent_center < 0 && motor_config.position == motor_config.num_positions - 1));
+    bool out_of_bounds = motor_config[id].num_positions > 0 && 
+                ((ms->angle_to_detent_center > 0 && motor_config[id].position == 0) 
+                || (ms->angle_to_detent_center < 0 && motor_config[id].position == motor_config[id].num_positions - 1));
     motor->PID_velocity.limit = out_of_bounds ? 10 : 3;
-    motor->PID_velocity.P = out_of_bounds ? motor_config.endstop_strength_unit * 4 : motor_config.detent_strength_unit * 4;
+    motor->PID_velocity.P = out_of_bounds ? motor_config[id].endstop_strength_unit * 4 : motor_config[id].detent_strength_unit * 4;
 
     // 处理float类型的取绝对值
     if (fabsf(motor->shaft_velocity) > 60) {
@@ -372,7 +385,7 @@ static int run_knob_task(BLDCMotor *motor, struct motor_stat *ms)
         #endif
         motor->move(torque);
     }
-    motor_status_publish(ms, out_of_bounds);
+    motor_status_publish(ms, id, out_of_bounds);
     return 0;
 }
 
@@ -381,27 +394,27 @@ void TaskMotorUpdate(void *pvParameters)
 {
     // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 #if XK_INVERT_ROTATION
-    motor_s0.current_detent_center = -motor_0.shaft_angle;
-    motor_s1.current_detent_center = -motor_1.shaft_angle;
+    motor_s[0].current_detent_center = -motor_0.shaft_angle;
+    motor_s[1].current_detent_center = -motor_1.shaft_angle;
 #else 
-    motor_s0.current_detent_center = motor_0.shaft_angle;
-    motor_s1.current_detent_center = motor_1.shaft_angle;
+    motor_s[0].current_detent_center = motor_0.shaft_angle;
+    motor_s[0].current_detent_center = motor_1.shaft_angle;
 #endif
     while(1) {
         sensor.update();
         motor_0.loopFOC();
-        run_knob_task(&motor_0, &motor_s0);
+        run_knob_task(&motor_0, 0);
         // Serial.printf("angle: %f\n", motor_1.shaft_angle);
         sensor_1.update();
         motor_1.loopFOC();
-        run_knob_task(&motor_1, &motor_s1);
+        run_knob_task(&motor_1, 1);
 
         // motor.move(1);
         // motor_1.move(1);
 
         // motor.monitor();
         commander.run();
-        // Serial.println(motor_config.position);
+        // Serial.println(motor_config[id].position);
         vTaskDelay(1);
     }
     
@@ -464,8 +477,9 @@ void HAL::motor_init(void)
     log_i("Motor starting...");
     pinMode(MT6701_SS_0, OUTPUT);
     digitalWrite(MT6701_SS_0, HIGH); 
-    memset(&motor_s0, 0, sizeof(struct motor_stat));
-    memset(&motor_s1, 0, sizeof(struct motor_stat));
+    for (int i = 0; i < MAX_MOTOR_NUM; i++) {
+        memset(&motor_s[i], 0, sizeof(struct motor_stat));
+    }
     init_motor(&motor_0, &driver, &sensor);
     init_motor(&motor_1, &driver_1, &sensor_1);
     vTaskDelay(100);
