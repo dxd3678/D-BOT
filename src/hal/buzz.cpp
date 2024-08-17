@@ -7,10 +7,8 @@ static uint32_t freq = 0;
 
 static void buzzer_thread(void* argument)
 {
-    for (;;)
-    {
-        if (duration > 0)
-        {
+    for (;;) {
+        if (duration > 0) {
             ledcWriteTone(CONFIG_BUZZ_CHANNEL, freq);
             delay(duration);
             ledcWriteTone(CONFIG_BUZZ_CHANNEL, 0);
@@ -34,7 +32,7 @@ void HAL::buzz_init(void)
     xTaskCreate(
         buzzer_thread,
         "BuzzerThread",
-        800,
+        4096,
         nullptr,
         ESP32_RUNNING_CORE,
         &handleBuzzerThread);
