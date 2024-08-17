@@ -33,3 +33,7 @@ Stack canary watchpoint triggered 通常是因为 FreeRTOS 的 task 栈设置得
 Guru Meditation Error: Core  1 panic'ed (Unhandled debug exception). 
 Debug exception reason: Stack canary watchpoint triggered (BuzzerThread)
 ```
+
+# 致谢开源
+
+-[Balance_Bot_DengFOC](https://github.com/ToanTech/Balance_Bot_DengFOC)

@@ -11,6 +11,26 @@ BLDCMotor motor_0 = BLDCMotor(7);
 BLDCDriver3PWM driver = BLDCDriver3PWM(MO0_1, MO0_2, MO0_3);
 BLDCMotor motor_1 = BLDCMotor(7);
 BLDCDriver3PWM driver_1 = BLDCDriver3PWM(MO1_1, MO1_2, MO1_3);
+
+// velocity control filtering
+LowPassFilter lpf_pitch_cmd = {
+    .Tf = 0.07
+};
+// low pass filters for user commands - throttle(油门) and steering
+LowPassFilter lpf_throttle = {
+    .Tf = 0.5
+};
+LowPassFilter lpf_steering = {
+    .Tf = 0.1
+};
+
+// control algorithm parametersw
+// stabilisation pid
+//P0.55 I5.5 初始值0.5 5 
+PIDController pid_stb{.P = 0.2, .I = 0, .D = 0, .ramp = 100000, .limit = 4}; 
+// velocity pid 速度PID P初始值1.5
+PIDController pid_vel{.P = 1.5, .I = 0, .D = 0.01, .ramp = 10000, .limit = _PI/4};
+float g_offset_parameters = 2.0; //偏置参数
 //目标变量
 float target_velocity = 0;
 
@@ -168,7 +188,8 @@ struct motor_stat motor_s[MAX_MOTOR_NUM];
 
 //  ------------monitor--------------------
 Commander commander = Commander(Serial, '\n', false);
-void onPid(char* cmd){commander.pid(&motor_0.PID_velocity, cmd);}
+
+void on_stb_pid(char* cmd){commander.pid(&pid_stb, cmd);}
 void onMotor(char* cmd){commander.motor(&motor_0, cmd);}
 // -------------monitor--------------------
 //目标变量
@@ -191,7 +212,7 @@ static void initMySensorCallback(void) {
     pinMode(hspi->pinSS(), OUTPUT); //HSPI SS
 }
 
-GenericSensor sensor = GenericSensor(readMySensorCallback, initMySensorCallback);
+GenericSensor sensor_0 = GenericSensor(readMySensorCallback, initMySensorCallback);
 
 //目标变量
 float readMySensorCallback_1(void) 
@@ -308,6 +329,28 @@ static void motor_status_publish(struct motor_stat *ms, int id, bool is_outbound
     
 }
 
+static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r, float throttle)
+{
+    float steering = 0;
+   
+    HAL::imu_update();
+    double mpu_yaw = HAL::imu_get_yaw();
+    // float target_yaw = lpf_pitch_cmd(pid_vel((motor_l->shaft_velocity + motor_r->shaft_velocity) / 2 - lpf_throttle(throttle)));
+    float target_yaw = 0;
+    float voltage_control = pid_stb(g_offset_parameters + mpu_yaw - target_yaw);
+    // float steering_adj = lpf_steering(steering);
+
+    float steering_adj = lpf_steering(steering);
+  
+    motor_l->target = voltage_control - steering_adj;
+    motor_r->target = -(voltage_control + steering_adj);
+
+    motor_l->move();
+    motor_r->move();
+    // Serial.printf("yaw: %0.2f, %0.2f\n", mpu_yaw, voltage_control);
+    return 0;
+}
+
 static int run_knob_task(BLDCMotor *motor, int id)
 {
     struct motor_stat *ms = &motor_s[id];
@@ -401,21 +444,23 @@ void TaskMotorUpdate(void *pvParameters)
     motor_s[0].current_detent_center = motor_1.shaft_angle;
 #endif
     while(1) {
-        sensor.update();
+        sensor_0.update();
         motor_0.loopFOC();
-        run_knob_task(&motor_0, 0);
+        // run_knob_task(&motor_0, 0);
         // Serial.printf("angle: %f\n", motor_1.shaft_angle);
         sensor_1.update();
         motor_1.loopFOC();
-        run_knob_task(&motor_1, 1);
+        // run_knob_task(&motor_1, 1);
 
+        run_balance_task(&motor_0, &motor_1, 0);
         // motor.move(1);
         // motor_1.move(1);
 
-        // motor.monitor();
+        motor_0.monitor();
+        // motor_0.monitor();
         commander.run();
         // Serial.println(motor_config[id].position);
-        vTaskDelay(1);
+        vTaskDelay(5);
     }
     
 }
@@ -453,10 +498,10 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
     //初始化电机
     motor->init();
     // motor->initFOC();
-    motor->monitor_downsample = 0;  // disable monitor at first - optional
+    motor->monitor_downsample = 1000;  // disable monitor at first - optional
 }
 
-void motor_initFOC(BLDCMotor *motor,char *str)
+void motor_initFOC(BLDCMotor *motor, const char *str)
 {
     float offset = 0;
     if(offset > 0)  {
@@ -480,7 +525,7 @@ void HAL::motor_init(void)
     for (int i = 0; i < MAX_MOTOR_NUM; i++) {
         memset(&motor_s[i], 0, sizeof(struct motor_stat));
     }
-    init_motor(&motor_0, &driver, &sensor);
+    init_motor(&motor_0, &driver, &sensor_0);
     init_motor(&motor_1, &driver_1, &sensor_1);
     vTaskDelay(100);
     pinMode(MO_EN, OUTPUT);
@@ -493,8 +538,9 @@ void HAL::motor_init(void)
     log_i("Set the target velocity using serial terminal:");
 
     commander.add('M', onMotor, "my motor");
-    
-    // commander.add('C', onPid, "PID vel");
+
+
+    commander.add('S', on_stb_pid, "PID stable");
     // commander.add('M', onMotor, "my motor");
     actMotorStatus = new Account("MotorStatus", AccountSystem::Broker(), sizeof(MotorStatusInfo), nullptr);
     ret = xTaskCreatePinnedToCore(

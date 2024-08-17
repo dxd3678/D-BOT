@@ -9,7 +9,7 @@
 typedef struct {
     bool is_outbound;
     int32_t position;
-    float angle_offset;
+    double angle_offset;
 }MotorStatusInfo;
 
 struct XKnobConfig {
