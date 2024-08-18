@@ -27,13 +27,13 @@ LowPassFilter lpf_steering = {
 // control algorithm parametersw
 // stabilisation pid
 //P0.55 I5.5 初始值0.5 5 
-PIDController pid_stb{.P = 0.2, .I = 0, .D = 0, .ramp = 100000, .limit = 4}; 
+PIDController pid_stb{.P = 0.4, .I = 0, .D = 0.01, .ramp = 100000, .limit = 8}; 
 // velocity pid 速度PID P初始值1.5
 PIDController pid_vel{.P = 1.5, .I = 0, .D = 0.01, .ramp = 10000, .limit = _PI/4};
-float g_offset_parameters = 2.0; //偏置参数
+float g_offset_parameters = 0.2; //偏置参数
 //目标变量
 float target_velocity = 0;
-
+#define MACHINE_MID_VALUE 1
 Account* actMotorStatus;
 
 #define MAX_MOTOR_NUM      2
@@ -335,19 +335,30 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r, float thrott
    
     HAL::imu_update();
     double mpu_yaw = HAL::imu_get_yaw();
+
+    if (abs(mpu_yaw - g_offset_parameters) > 30) {
+        motor_l->target = 0;
+        motor_r->target = 0;
+        motor_l->move();
+        motor_r->move();
+        return -1;
+    }
+
     // float target_yaw = lpf_pitch_cmd(pid_vel((motor_l->shaft_velocity + motor_r->shaft_velocity) / 2 - lpf_throttle(throttle)));
     float target_yaw = 0;
     float voltage_control = pid_stb(g_offset_parameters + mpu_yaw - target_yaw);
     // float steering_adj = lpf_steering(steering);
 
     float steering_adj = lpf_steering(steering);
-  
+#if MACHINE_MID_VALUE
     motor_l->target = voltage_control - steering_adj;
     motor_r->target = -(voltage_control + steering_adj);
 
     motor_l->move();
     motor_r->move();
-    // Serial.printf("yaw: %0.2f, %0.2f\n", mpu_yaw, voltage_control);
+#else
+    Serial.printf("yaw: %0.2f, %0.2f\n", mpu_yaw, voltage_control);
+#endif
     return 0;
 }
 
@@ -480,7 +491,9 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
     //FOC模型选择
     motor->foc_modulation = FOCModulationType::SpaceVectorPWM;
     //运动控制模式设置
+    motor->torque_controller = TorqueControlType::voltage;
     motor->controller = MotionControlType::torque;
+
     // 速度PI环设置
     motor->PID_velocity.P = 1;
     motor->PID_velocity.I = 0;
@@ -494,7 +507,7 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
     motor->LPF_velocity.Tf = 0.01;
     //设置最大速度限制
     motor->velocity_limit = 10;
-
+    motor->useMonitoring(Serial);
     //初始化电机
     motor->init();
     // motor->initFOC();
