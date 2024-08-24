@@ -3,7 +3,7 @@
 #include "secrets.h"
 
 
-#define INIT_VALUE 0xdd
+#define INIT_VALUE 0xdb
 
 NvsConfig ncv_config;
 
@@ -15,7 +15,7 @@ void nvs_init(void)
     if(value != INIT_VALUE){
         prefs.putUChar(FFAT_KEY, 0);
         set_lcd_bk_brightness(LCD_BK_DEFAULT_BRIGHTNESS); //default lcd bk
-        set_lcd_bk_timeout(LCD_BK_DEFAULT_TIMEOUT); //default lcd bk time out 5mins
+        set_lcd_bk_timeout(LCD_BK_DEFAULT_TIMEOUT);       //default lcd bk time out 5mins
         set_wifi_config(WIFI_SSID, WIFI_PASSWORD);
         set_mqtt_config(MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, MQTT_HOST );
         set_init_ffat(0);
@@ -54,20 +54,25 @@ uint8_t get_init_ffat(void)
     return ncv_config.init_ffat_flag;
 }
 
-uint16_t get_lcd_bk_brightness(){
+uint16_t get_lcd_bk_brightness(void)
+{
     return ncv_config.lcd_bk_brightness;
 }
 
-uint16_t get_lcd_bk_timeout(){
+uint16_t get_lcd_bk_timeout(void)
+{
     return ncv_config.lcd_bk_timeout;
 }
 
-void get_wifi_config(String &ssid,String &password){
+void get_wifi_config(String &ssid,String &password)
+{
     ssid = ncv_config.wifi_ssid;
     password = ncv_config.wifi_password;
 }
 
-void get_mqtt_config(String &host,uint16_t &port,String &username,String &password,String &topic){
+void get_mqtt_config(String &host,uint16_t &port,String &username,
+                            String &password,String &topic)
+{
     host =  ncv_config.mqtt_host;
     port = ncv_config.mqtt_port;
     username = ncv_config.mqtt_username;
@@ -81,7 +86,8 @@ void get_mqtt_config(String &host,uint16_t &port,String &username,String &passwo
     log_d("get MQTT_TPOIC_KEY Config: %s\n", ncv_config.mqtt_topic.c_str() );
 }
 
-void set_init_ffat(uint8_t value){
+void set_init_ffat(uint8_t value)
+{
     Preferences prefs; 
     prefs.begin(CONFIG_NAMESPACE);  
     prefs.putUChar(FFAT_KEY, value);
@@ -90,7 +96,8 @@ void set_init_ffat(uint8_t value){
     log_d("set FFAT_KEY Config: %d\n", value );
 }
 
-void set_lcd_bk_brightness(uint16_t value){
+void set_lcd_bk_brightness(uint16_t value)
+{
     Preferences prefs;     
     prefs.begin(CONFIG_NAMESPACE); 
     prefs.putUShort(LCD_BK_BRIGHTNESS_KEY, value);
@@ -100,7 +107,8 @@ void set_lcd_bk_brightness(uint16_t value){
     log_d("set LCD_BK_BRIGHTNESS_KEY Config: %d\n", value );
 }
 
-void set_lcd_bk_timeout(uint16_t value){
+void set_lcd_bk_timeout(uint16_t value)
+{
     Preferences prefs;     
     prefs.begin(CONFIG_NAMESPACE); 
     prefs.putUShort(LCD_BK_TIME_OUT_KEY, value);
@@ -109,7 +117,8 @@ void set_lcd_bk_timeout(uint16_t value){
     log_d("set LCD_BK_TIME_OUT_KEY Config: %d\n", value );
 }
 
-void set_wifi_config(String ssid,String password){
+void set_wifi_config(String ssid,String password)
+{
     Preferences prefs;     
     prefs.begin(CONFIG_NAMESPACE); 
     prefs.putString(WIFI_SSID_KEY, ssid);
@@ -121,7 +130,9 @@ void set_wifi_config(String ssid,String password){
     log_d("set WIFI_PASSWORD_KEY Config: %s\n", password.c_str() );
 }
 
-void set_mqtt_config(String host,uint16_t port,String username,String password,String topic){
+void set_mqtt_config(String host, uint16_t port, String username,
+                        String password,String topic)
+{
     Preferences prefs;     
     prefs.begin(CONFIG_NAMESPACE); 
     prefs.putString(MQTT_HOST_KEY, host);

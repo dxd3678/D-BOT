@@ -19,8 +19,11 @@ typedef enum {
     HASS_MAX,
 } HassMotion;
 
+typedef int (*wl_parm_cb)(char *);
+
 namespace HAL
 {
+
     void Init();
     void Update();
 
@@ -50,6 +53,7 @@ namespace HAL
     void mqtt_init(void);
     int mqtt_publish(const char *topic, const char *playload);
     int mqtt_subscribe(const char *topic);
+    int setup_wifi(void);
 
     void lcd_brightness_init();
     void set_lcd_brightness(int value);
@@ -65,6 +69,7 @@ namespace HAL
     void  imu_update(void);
     float imu_get_yaw(void);
 
+    int wireless_param_init(wl_parm_cb cb);
 }
 
 

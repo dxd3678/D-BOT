@@ -12,6 +12,9 @@ BLDCDriver3PWM driver = BLDCDriver3PWM(MO0_1, MO0_2, MO0_3);
 BLDCMotor motor_1 = BLDCMotor(7);
 BLDCDriver3PWM driver_1 = BLDCDriver3PWM(MO1_1, MO1_2, MO1_3);
 
+static float g_motor_0_offset = 0;
+static float g_motor_1_offset = 0;
+
 // velocity control filtering
 LowPassFilter lpf_pitch_cmd = {
     .Tf = 0.07
@@ -26,11 +29,11 @@ LowPassFilter lpf_steering = {
 
 // control algorithm parametersw
 // stabilisation pid
-//P0.55 I5.5 初始值0.5 5 
-PIDController pid_stb{.P = 0.4, .I = 0, .D = 0.01, .ramp = 100000, .limit = 8}; 
+// 初始值 P0.3 D: 0.02  -- 0.18 0.024
+PIDController pid_stb{.P = 0.6, .I = 0, .D = 0.012, .ramp = 100000, .limit = 7}; 
 // velocity pid 速度PID P初始值1.5
-PIDController pid_vel{.P = 1.5, .I = 0, .D = 0.01, .ramp = 10000, .limit = _PI/4};
-float g_offset_parameters = 0.2; //偏置参数
+PIDController pid_vel{.P = 6, .I = 0.020, .D = 0.00, .ramp = 100000, .limit = 30};
+float g_offset_parameters = 2.2; // 偏置参数
 //目标变量
 float target_velocity = 0;
 #define MACHINE_MID_VALUE 1
@@ -190,7 +193,14 @@ struct motor_stat motor_s[MAX_MOTOR_NUM];
 Commander commander = Commander(Serial, '\n', false);
 
 void on_stb_pid(char* cmd){commander.pid(&pid_stb, cmd);}
-void onMotor(char* cmd){commander.motor(&motor_0, cmd);}
+void on_vel_pid(char* cmd){commander.pid(&pid_vel, cmd);}
+void on_imu_offset(char *cmd)
+{
+    commander.scalar(&g_offset_parameters, cmd); 
+    log_i("imu offset change to %.2f\n", g_offset_parameters);
+}
+
+void on_motor(char* cmd){commander.motor(&motor_0, cmd);}
 // -------------monitor--------------------
 //目标变量
 static float readMySensorCallback(void) {
@@ -332,27 +342,27 @@ static void motor_status_publish(struct motor_stat *ms, int id, bool is_outbound
 static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r, float throttle)
 {
     float steering = 0;
-   
+    float voltage_control;
     HAL::imu_update();
     double mpu_yaw = HAL::imu_get_yaw();
 
-    if (abs(mpu_yaw - g_offset_parameters) > 30) {
-        motor_l->target = 0;
-        motor_r->target = 0;
-        motor_l->move();
-        motor_r->move();
-        return -1;
-    }
-
-    // float target_yaw = lpf_pitch_cmd(pid_vel((motor_l->shaft_velocity + motor_r->shaft_velocity) / 2 - lpf_throttle(throttle)));
-    float target_yaw = 0;
-    float voltage_control = pid_stb(g_offset_parameters + mpu_yaw - target_yaw);
+    voltage_control = lpf_pitch_cmd(pid_vel((motor_l->shaft_velocity + motor_r->shaft_velocity) / 2 - lpf_throttle(throttle)));
+    // float target_yaw = 0;
+    voltage_control = pid_stb(g_offset_parameters + mpu_yaw - voltage_control);
+    // float voltage_control = pid_stb(Offset_parameters - mpu_pitch + target_pitch);
     // float steering_adj = lpf_steering(steering);
 
     float steering_adj = lpf_steering(steering);
+
 #if MACHINE_MID_VALUE
-    motor_l->target = voltage_control - steering_adj;
-    motor_r->target = -(voltage_control + steering_adj);
+    motor_l->target = -(voltage_control - steering_adj);
+    motor_r->target = (voltage_control + steering_adj);
+
+    if (abs(mpu_yaw - g_offset_parameters) > 40) {
+        motor_l->target = 0;
+        motor_r->target = 0;
+
+    }
 
     motor_l->move();
     motor_r->move();
@@ -514,9 +524,8 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
     motor->monitor_downsample = 1000;  // disable monitor at first - optional
 }
 
-void motor_initFOC(BLDCMotor *motor, const char *str)
+void motor_initFOC(BLDCMotor *motor, float offset)
 {
-    float offset = 0;
     if(offset > 0)  {
         log_i("has a offset value %.2f\n", offset);
         Direction foc_direction = Direction::CW;
@@ -527,6 +536,15 @@ void motor_initFOC(BLDCMotor *motor, const char *str)
         }
     }
 }
+
+#ifdef XK_WIRELESS_PARAMETER
+
+static int wl_parameter_cb(char *msg)
+{
+    commander.run(msg);
+    return 0;
+}
+#endif
 
 void HAL::motor_init(void)
 {
@@ -544,16 +562,22 @@ void HAL::motor_init(void)
     pinMode(MO_EN, OUTPUT);
     digitalWrite(MO_EN, HIGH);  
 
-    motor_initFOC(&motor_0, "offset_0");
-    motor_initFOC(&motor_1, "offset_1");
+    motor_initFOC(&motor_0, g_motor_0_offset);
+    motor_initFOC(&motor_1, g_motor_1_offset);
 
     log_i("Motor ready.");
     log_i("Set the target velocity using serial terminal:");
 
-    commander.add('M', onMotor, "my motor");
+    commander.add('M', on_motor, "my motor");
 
 
     commander.add('S', on_stb_pid, "PID stable");
+    commander.add('V', on_vel_pid, "PID vel");
+    commander.add('O', on_imu_offset, "imu offset");
+
+#ifdef XK_WIRELESS_PARAMETER
+    HAL::wireless_param_init(wl_parameter_cb);
+#endif
     // commander.add('M', onMotor, "my motor");
     actMotorStatus = new Account("MotorStatus", AccountSystem::Broker(), sizeof(MotorStatusInfo), nullptr);
     ret = xTaskCreatePinnedToCore(

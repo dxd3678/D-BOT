@@ -23,8 +23,8 @@ void push_handler(ButtonEvent* btn, int event)
 }
 
 void setup() {
-    HAL::Init();
     nvs_init();
+    HAL::Init();
     ffat_init();
     // strip_init();
     // HWSerial.begin(115200);

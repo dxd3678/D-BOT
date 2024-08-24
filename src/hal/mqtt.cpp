@@ -14,16 +14,17 @@ PubSubClient mqtt_client(wifi_client);
 int mqtt_last_connect_time = 0;
 
 
-int setup_wifi() {
+int HAL::setup_wifi(void) 
+{
     int retry_cnt = 0;
-    int max_retry_cnt = 10;
-    String ssid,password;
+    int max_retry_cnt = 30;
+    String ssid, password;
     get_wifi_config(ssid,password);
     const char *wifi_name = ssid.c_str();  
     const char *wifi_pass = password.c_str(); 
 
-    printf("connecting to WiFi..: %s\n", ssid);
-    WiFi.begin(wifi_name, wifi_pass );
+    log_i("connecting to WiFi..: %s\n", ssid);
+    WiFi.begin(wifi_name, wifi_pass);
     
     while (WiFi.status() != WL_CONNECTED && retry_cnt < max_retry_cnt) {
         Serial.print(".");
@@ -32,9 +33,9 @@ int setup_wifi() {
     }
 
    if (WiFi.status() == WL_CONNECTED) {
-        printf("Connected to network %s\n", ssid);
+        log_i("Connected to network %s\n", ssid);
    } else {
-        printf("WiFi connection timeout: %s\n", ssid);
+        log_i("WiFi connection timeout: %s\n", ssid);
         return -1;
    }
    return 0;
@@ -56,7 +57,7 @@ void connectMQTT() {
     Serial.println("Attempting MQTT connection...");
 
     if (WiFi.status() != WL_CONNECTED) {
-        if (setup_wifi()) {
+        if (HAL::setup_wifi()) {
             return;
         }
     }
