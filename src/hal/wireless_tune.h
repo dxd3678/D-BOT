@@ -24,13 +24,16 @@ public:
     // Enable print and println methods
     using Print::write;
 private:
-    WiFiUDP _udp;
+    WiFiServer _server;
+    WiFiClient _client;
     IPAddress _remoteIP;
     uint16_t _remotePort;
     uint16_t _localPort;
     int _packetSize;
     uint8_t _packetBuffer[255];
     size_t _packetIndex;
-    // Handles incoming probe messages
-     void receivePacket();
+
+    void acceptClient();
+    void receivePacket();
+    int handleClientDisconnect();
 };

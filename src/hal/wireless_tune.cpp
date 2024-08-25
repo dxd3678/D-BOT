@@ -29,36 +29,66 @@ void CommanderWirelessGlue::begin(const char* ssid, const char* password)
     }
     Serial.printf("Connected to WiFi.\n");
     Serial.printf("IP address: %s", WiFi.localIP().toString());
-    // Start UDP
-    _udp.begin(_localPort);
+    
+    _server = WiFiServer(_localPort);
+    _server.begin(_localPort);
 
 }
 
-void CommanderWirelessGlue::receivePacket() {
-    if ( _udp.parsePacket() > 0) {
-        _remoteIP = _udp.remoteIP();
-        _remotePort = _udp.remotePort();
-        _packetSize = _udp.read(_packetBuffer, WL_TUNE_MAX_PACKETSIZE);
-        _packetBuffer[_packetSize + 1] = '\0';
+int CommanderWirelessGlue::handleClientDisconnect() {
+    if (_client && !_client.connected()) {
+
+        Serial.printf("client disconnected, %s:%d\n", _client.remoteIP().toString(), 
+                            _client.remotePort());
+        _client.stop(); // Close the client connection
+        _client = WiFiClient(); // Reset the client
+        _packetSize = 0;
         _packetIndex = 0;
 
-        // Serial.printf("remote: %s:%d - msg: %s size: %d, packet_Index: %d\n", 
-        //                     _remoteIP.toString(), _remotePort, _packetBuffer, 
-        //                     _packetSize, _packetIndex);
+
+        return true;
+    }
+    return false;
+}
+
+void CommanderWirelessGlue::acceptClient() {
+    if (!_client || !_client.connected()) {
+        _client = _server.available(); // Accept a new _client
+        if (!_client.connected()) {
+            // invalid client
+            return;
+        }
+        Serial.printf("accept new conn, %s:%d\n", _client.remoteIP().toString(), 
+                            _client.remotePort());
+    }
+}
+
+void CommanderWirelessGlue::receivePacket() {
+
+    handleClientDisconnect(); // Check if the client is still connected
+    acceptClient();  // Ensure we have a client connected before checking for data
+
+    if (_client && _client.connected()) {
+        if (_client.available()) {
+            _packetSize = _client.read(_packetBuffer, sizeof(_packetBuffer));
+            _packetIndex = 0;
+        }
     }
 }
 
 int CommanderWirelessGlue::available() {
-
+    if (handleClientDisconnect()) {
+        return 0;
+    }
+    acceptClient();  // Ensure we have a client connected before writing data
+    
     if (_packetIndex >= _packetSize) {
         receivePacket();  // Check for a new packet if the current one is fully read
     }
-
-    return  _packetSize - _packetIndex;
+    return _packetSize - _packetIndex;
 }
 
 int CommanderWirelessGlue::read() {
-
     if (_packetIndex < _packetSize) {
         return _packetBuffer[_packetIndex++];
     } else {
@@ -75,25 +105,34 @@ int CommanderWirelessGlue::peek() {
 }
 
 void CommanderWirelessGlue::flush() {
-    // Nothing to flush in this implementation
+    if (_client) {
+        _client.flush();
+    }
 }
 
 size_t CommanderWirelessGlue::write(uint8_t data) {
-    if (_remotePort != UINT16_MAX) {
-        _udp.beginPacket(_remoteIP, _remotePort);
-        _udp.write(data);
-        return _udp.endPacket();
+    if (handleClientDisconnect()) {
+        return 0;
+    }
+    acceptClient();  // Ensure we have a client connected before writing data
+
+    if (_client && _client.connected()) {
+        return _client.write(data);
     } else {
-        return 0; // No client to send data to
+        return 0; // No _client to send data to
     }
 }
 
 size_t CommanderWirelessGlue::write(const uint8_t* buffer, size_t size) {
-    if (_remotePort != UINT16_MAX) {
-        _udp.beginPacket(_remoteIP, _remotePort);
-        _udp.write(buffer, size);
-        return _udp.endPacket();
+
+    if (handleClientDisconnect()) {
+        return 0;
+    }
+    acceptClient();  // Ensure we have a client connected before writing data
+
+    if (_client && _client.connected()) {
+        return _client.write(buffer, size);
     } else {
-        return 0; // No client to send data to
+        return 0; // No _client to send data to
     }
 }
