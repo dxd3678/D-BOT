@@ -2,6 +2,8 @@
 #include "motor.h"
 #include <SimpleFOC.h>
 #include "app/Accounts/Account_Master.h"
+#include "wireless_tune.h"
+#include "nvs.h"
 
 SPIClass* hspi = NULL;
 SPIClass* hspi_1 = NULL;
@@ -32,7 +34,7 @@ LowPassFilter lpf_steering = {
 // 初始值 P0.3 D: 0.02  -- 0.18 0.024
 PIDController pid_stb{.P = 0.6, .I = 0, .D = 0.012, .ramp = 100000, .limit = 7}; 
 // velocity pid 速度PID P初始值1.5
-PIDController pid_vel{.P = 6, .I = 0.020, .D = 0.00, .ramp = 100000, .limit = 30};
+PIDController pid_vel{.P = 0, .I = 0, .D = 0.00, .ramp = 100000, .limit = 30};
 float g_offset_parameters = 2.2; // 偏置参数
 //目标变量
 float target_velocity = 0;
@@ -190,7 +192,15 @@ struct motor_stat {
 struct motor_stat motor_s[MAX_MOTOR_NUM];
 
 //  ------------monitor--------------------
+#ifdef XK_WIRELESS_PARAMETER
+
+CommanderWirelessGlue wireless = CommanderWirelessGlue(4242);
+Commander commander = Commander(wireless, '\n', true);
+
+#else 
+
 Commander commander = Commander(Serial, '\n', false);
+#endif
 
 void on_stb_pid(char* cmd){commander.pid(&pid_stb, cmd);}
 void on_vel_pid(char* cmd){commander.pid(&pid_vel, cmd);}
@@ -477,7 +487,7 @@ void TaskMotorUpdate(void *pvParameters)
         // motor.move(1);
         // motor_1.move(1);
 
-        motor_0.monitor();
+        // motor_0.monitor();
         // motor_0.monitor();
         commander.run();
         // Serial.println(motor_config[id].position);
@@ -517,7 +527,11 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
     motor->LPF_velocity.Tf = 0.01;
     //设置最大速度限制
     motor->velocity_limit = 10;
+#ifdef XK_WIRELESS_PARAMETER
+    motor->useMonitoring(wireless);
+#elif
     motor->useMonitoring(Serial);
+#endif
     //初始化电机
     motor->init();
     // motor->initFOC();
@@ -537,15 +551,6 @@ void motor_initFOC(BLDCMotor *motor, float offset)
     }
 }
 
-#ifdef XK_WIRELESS_PARAMETER
-
-static int wl_parameter_cb(char *msg)
-{
-    commander.run(msg);
-    return 0;
-}
-#endif
-
 void HAL::motor_init(void)
 {
 
@@ -562,6 +567,14 @@ void HAL::motor_init(void)
     pinMode(MO_EN, OUTPUT);
     digitalWrite(MO_EN, HIGH);  
 
+#ifdef XK_WIRELESS_PARAMETER
+    String ssid, password;
+    get_wifi_config(ssid, password);
+    const char *wifi_name = ssid.c_str();  
+    const char *wifi_pass = password.c_str(); 
+    wireless.begin(wifi_name, wifi_pass);
+#endif
+
     motor_initFOC(&motor_0, g_motor_0_offset);
     motor_initFOC(&motor_1, g_motor_1_offset);
 
@@ -575,9 +588,6 @@ void HAL::motor_init(void)
     commander.add('V', on_vel_pid, "PID vel");
     commander.add('O', on_imu_offset, "imu offset");
 
-#ifdef XK_WIRELESS_PARAMETER
-    HAL::wireless_param_init(wl_parameter_cb);
-#endif
     // commander.add('M', onMotor, "my motor");
     actMotorStatus = new Account("MotorStatus", AccountSystem::Broker(), sizeof(MotorStatusInfo), nullptr);
     ret = xTaskCreatePinnedToCore(

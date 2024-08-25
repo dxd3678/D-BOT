@@ -3,67 +3,97 @@
  */
 
 #include "hal/hal.h"
-#include <AsyncUDP.h> 
-#include <WiFi.h>
+#include "wireless_tune.h"
+#include <Arduino.h>
 
-#define WL_UDP_PORT 2333
-
-
-static wl_parm_cb g_wl_cb = NULL;
-
-AsyncUDP udp; 
-bool wl_param_inited = false;
-void on_udp_packet_cb(AsyncUDPPacket packet) 
+#define WL_TUNE_MAX_PACKETSIZE  255
+// const uint8_t *probe_rsp = (const uint8_t *)"STUDIO_YES";
+// const char *probe_msg = "STUDIO_PROBE";
+CommanderWirelessGlue::CommanderWirelessGlue( uint16_t localPort) 
+  : _localPort(localPort), _packetSize(0), _packetIndex(0), _remotePort(UINT16_MAX)
 {
-    char *pd = (char*)(packet.data());
-    log_d("udp msg: %s", pd);
-
-    if (g_wl_cb != NULL) {
-        g_wl_cb(pd);
-    }
-    // packet.print("reply data");
 }
 
-static int wl_setup_udp(uint16_t port) 
+CommanderWirelessGlue::~CommanderWirelessGlue() 
 {
-    int retry_cnt = 0;
-    int max_retry_cnt = 10;
-    if (WiFi.status() != WL_CONNECTED) {
-        if (HAL::setup_wifi()) {
-            log_e("setup WiFi failed.");
-            return 1;
-        }
-    }
-
-    log_i("IP address: %s", WiFi.localIP().toString());
-
-
-    while (!udp.listen(port) && retry_cnt < max_retry_cnt) {
-        Serial.print(".");
-        retry_cnt++;
-        delay(100);
-    }
-
-    if (!udp.listen(port)) {
-        printf("Listen port %u timeout.\n", port);
-        return -1;
-    }
-
-    while (!udp.listen(port)) { }
-    udp.onPacket(on_udp_packet_cb); //注册收到数据包事件
-
-    wl_param_inited = true;
-    return 0;
+    // Destructor for cleanup
 }
 
-int HAL::wireless_param_init(wl_parm_cb cb)
+void CommanderWirelessGlue::begin(const char* ssid, const char* password)
 {
-    int rc = 0;
-    rc = wl_setup_udp(WL_UDP_PORT);
+    // Connect to WiFi network
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.println("Connecting to WiFi...");
+    }
+    Serial.printf("Connected to WiFi.\n");
+    Serial.printf("IP address: %s", WiFi.localIP().toString());
+    // Start UDP
+    _udp.begin(_localPort);
 
-    if (!rc) {
-        g_wl_cb = cb;
+}
+
+void CommanderWirelessGlue::receivePacket() {
+    if ( _udp.parsePacket() > 0) {
+        _remoteIP = _udp.remoteIP();
+        _remotePort = _udp.remotePort();
+        _packetSize = _udp.read(_packetBuffer, WL_TUNE_MAX_PACKETSIZE);
+        _packetBuffer[_packetSize + 1] = '\0';
+        _packetIndex = 0;
+
+        // Serial.printf("remote: %s:%d - msg: %s size: %d, packet_Index: %d\n", 
+        //                     _remoteIP.toString(), _remotePort, _packetBuffer, 
+        //                     _packetSize, _packetIndex);
+    }
+}
+
+int CommanderWirelessGlue::available() {
+
+    if (_packetIndex >= _packetSize) {
+        receivePacket();  // Check for a new packet if the current one is fully read
     }
 
-    return rc;
+    return  _packetSize - _packetIndex;
+}
+
+int CommanderWirelessGlue::read() {
+
+    if (_packetIndex < _packetSize) {
+        return _packetBuffer[_packetIndex++];
+    } else {
+        return -1; // No more data to read
+    }
+}
+
+int CommanderWirelessGlue::peek() {
+    if (_packetIndex < _packetSize) {
+        return _packetBuffer[_packetIndex];
+    } else {
+        return -1; // No more data to peek at
+    }
+}
+
+void CommanderWirelessGlue::flush() {
+    // Nothing to flush in this implementation
+}
+
+size_t CommanderWirelessGlue::write(uint8_t data) {
+    if (_remotePort != UINT16_MAX) {
+        _udp.beginPacket(_remoteIP, _remotePort);
+        _udp.write(data);
+        return _udp.endPacket();
+    } else {
+        return 0; // No client to send data to
+    }
+}
+
+size_t CommanderWirelessGlue::write(const uint8_t* buffer, size_t size) {
+    if (_remotePort != UINT16_MAX) {
+        _udp.beginPacket(_remoteIP, _remotePort);
+        _udp.write(buffer, size);
+        return _udp.endPacket();
+    } else {
+        return 0; // No client to send data to
+    }
 }
