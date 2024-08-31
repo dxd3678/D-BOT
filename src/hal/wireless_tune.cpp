@@ -7,6 +7,8 @@
 #include <Arduino.h>
 
 #define WL_TUNE_MAX_PACKETSIZE  255
+
+
 // const uint8_t *probe_rsp = (const uint8_t *)"STUDIO_YES";
 // const char *probe_msg = "STUDIO_PROBE";
 CommanderWirelessGlue::CommanderWirelessGlue( uint16_t localPort) 
@@ -19,19 +21,40 @@ CommanderWirelessGlue::~CommanderWirelessGlue()
     // Destructor for cleanup
 }
 
-void CommanderWirelessGlue::begin(const char* ssid, const char* password)
+bool CommanderWirelessGlue::begin(const char* ssid, const char* password, 
+                                            WiFiMode mode)
 {
-    // Connect to WiFi network
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-        Serial.println("Connecting to WiFi...");
+    
+    bool success = false;
+    if (mode == AP_MODE) {
+        success = WiFi.softAP(ssid, password);
+    } else if (mode == STA_MODE) {
+        // Connect to WiFi network
+        WiFi.begin(ssid, password);
+        unsigned long start_time = millis();
+        while (WiFi.status() != WL_CONNECTED && millis() - start_time < 10000) {
+            delay(1000);
+            Serial.println("Connecting to WiFi...");
+        }
+        
+        success = (WiFi.status() == WL_CONNECTED);
+    } else {
+        // Invalid mode
+        return false; // 
     }
+    
+    if (!success) {
+        Serial.printf("setup WiFi failed\n");
+        return false; // Failed to start in the selected mode
+    }
+
     Serial.printf("Connected to WiFi.\n");
     Serial.printf("IP address: %s", WiFi.localIP().toString());
     
     _server = WiFiServer(_localPort);
     _server.begin(_localPort);
+
+    return true;
 
 }
 
@@ -81,7 +104,7 @@ int CommanderWirelessGlue::available() {
         return 0;
     }
     acceptClient();  // Ensure we have a client connected before writing data
-    
+
     if (_packetIndex >= _packetSize) {
         receivePacket();  // Check for a new packet if the current one is fully read
     }

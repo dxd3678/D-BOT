@@ -2,6 +2,11 @@
 #include <WiFiUDP.h> 
 #include <WiFi.h>
 
+enum WiFiMode {
+    AP_MODE,
+    STA_MODE
+};
+
 class CommanderWirelessGlue: public Stream {
 
 public:
@@ -9,7 +14,7 @@ public:
     CommanderWirelessGlue(uint16_t localPort = 4242);
     ~CommanderWirelessGlue();
 
-    void begin(const char* ssid, const char* password);
+    bool begin(const char* ssid, const char* password, WiFiMode mode = STA_MODE);
 
     // Stream类中必须实现的虚函数
     virtual int available() override;
