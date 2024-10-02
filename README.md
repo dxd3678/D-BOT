@@ -23,6 +23,18 @@ export PATH=$PATH:~/.platformio/packages/toolchain-xtensa-esp32s3/bin
 xtensa-esp32s3-elf-addr2line.exe -pfiaC -e .pio/build/esp32-s3-devkitc-1/firmware.elf 0x42007e97
 ```
 
+```c
+// 调参， 直立环
+SP0.2
+// 调参， 速度环
+VP1
+// imu offset
+O2
+
+// 开启 Verb
+@
+```
+
 # 一些常见的问题
 
 Stack canary watchpoint triggered 通常是因为 FreeRTOS 的 task 栈设置得太小，适当增大 stack depth 即可解决。

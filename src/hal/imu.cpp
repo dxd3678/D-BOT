@@ -12,7 +12,7 @@ void HAL::imu_init(void)
     mpu.begin();
     mpu.calcGyroOffsets(true);
 
-    Serial.printf("imu init yaw offset : %0.2f\n", imu_get_yaw());
+    log_d("imu init yaw offset : %0.2f\n", imu_get_yaw());
 }
 
 /*

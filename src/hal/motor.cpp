@@ -2,7 +2,7 @@
 #include "motor.h"
 #include <SimpleFOC.h>
 #include "app/Accounts/Account_Master.h"
-#include "wireless_tune.h"
+#include "wireless_tuning.h"
 #include "nvs.h"
 
 SPIClass* hspi = NULL;
@@ -194,8 +194,8 @@ struct motor_stat motor_s[MAX_MOTOR_NUM];
 //  ------------monitor--------------------
 #ifdef XK_WIRELESS_PARAMETER
 
-CommanderWirelessGlue wireless = CommanderWirelessGlue(4242);
-Commander commander = Commander(wireless, '\n', true);
+WirelessTuning wireless = WirelessTuning(4242);
+Commander commander = Commander(wireless, '\n', false);
 
 #else 
 
@@ -487,7 +487,7 @@ void TaskMotorUpdate(void *pvParameters)
         // motor.move(1);
         // motor_1.move(1);
 
-        // motor_0.monitor();
+        motor_0.monitor();
         // motor_0.monitor();
         commander.run();
         // Serial.println(motor_config[id].position);
@@ -527,15 +527,18 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
     motor->LPF_velocity.Tf = 0.01;
     //设置最大速度限制
     motor->velocity_limit = 10;
+
+    motor->monitor_variables = _MON_TARGET | _MON_VEL | _MON_ANGLE;
+
 #ifdef XK_WIRELESS_PARAMETER
     motor->useMonitoring(wireless);
-#elif
+#else
     motor->useMonitoring(Serial);
 #endif
     //初始化电机
     motor->init();
     // motor->initFOC();
-    motor->monitor_downsample = 1000;  // disable monitor at first - optional
+    motor->monitor_downsample = 100;  // disable monitor at first - optional
 }
 
 void motor_initFOC(BLDCMotor *motor, float offset)
@@ -573,6 +576,7 @@ void HAL::motor_init(void)
     const char *wifi_name = ssid.c_str();  
     const char *wifi_pass = password.c_str(); 
     wireless.begin(wifi_name, wifi_pass);
+    // ret = wireless.begin("ESP_DINGMOS", "12344321", AP_MODE);
 #endif
 
     motor_initFOC(&motor_0, g_motor_0_offset);
