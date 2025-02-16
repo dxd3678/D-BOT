@@ -19,6 +19,8 @@ typedef enum {
     HASS_MAX,
 } HassMotion;
 
+#define MOTOR_MAX_SPEED  10
+
 typedef int (*wl_parm_cb)(char *);
 
 namespace HAL
@@ -36,6 +38,7 @@ namespace HAL
     int get_motor_position(int id);
     void update_motor_mode(int id, int mode , int init_position);
     void motor_shake(int id, int strength, int delay_time);
+    void motor_set_speed(int speed, int steering);
 
     void surface_dial_init(void);
     void surface_dial_update(SuperDialMotion direction);

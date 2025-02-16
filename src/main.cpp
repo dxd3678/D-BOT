@@ -4,6 +4,7 @@
 #include "hal/hal.h"
 #include "hal/nvs.h"
 #include "web/WiFiAsyncWebServer.h"
+#include "hal/controller.h"
 
 void push_handler(ButtonEvent* btn, int event)
 {
@@ -26,6 +27,7 @@ void setup() {
     nvs_init();
     HAL::Init();
     ffat_init();
+    controller_init();
     // strip_init();
     // HWSerial.begin(115200);
     display_init();

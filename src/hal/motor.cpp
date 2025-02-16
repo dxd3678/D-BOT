@@ -32,7 +32,6 @@ LowPassFilter lpf_steering = {
     .Tf = 0.5
 };
 
-#define MOTOR_MAX_SPEED  100
 #define MOTOR_MAX_TORQUE 7
 #define BALANCE_WAITTING_TIME  1000
 #define BALANCE_STOP_PITCH_OFFSET 40
@@ -54,6 +53,8 @@ PIDController pid_steering{
 };
 
 float g_offset_parameters = -4; // 偏置参数
+float g_throttle = 0;
+float g_steering = 0;
 //目标变量
 float target_velocity = 0;
 #define MACHINE_MID_VALUE 1
@@ -222,6 +223,7 @@ Commander commander = Commander(Serial, '\n', false);
 
 void on_stb_pid(char* cmd){commander.pid(&pid_stb, cmd);}
 void on_vel_pid(char* cmd){commander.pid(&pid_vel, cmd);}
+void on_str_pid(char* cmd){commander.pid(&pid_steering, cmd);}
 void on_imu_offset(char *cmd)
 {
     commander.scalar(&g_offset_parameters, cmd);
@@ -554,7 +556,7 @@ void TaskMotorUpdate(void *pvParameters)
         motor_1.loopFOC();
         // run_knob_task(&motor_1, 1);
 
-        run_balance_task(&motor_0, &motor_1, 0, 0);
+        run_balance_task(&motor_0, &motor_1, 0, g_steering);
 
         // motor_0.move(10);
         // motor_1.move(10);
@@ -662,6 +664,7 @@ void HAL::motor_init(void)
 
     commander.add('S', on_stb_pid, "PID stable");
     commander.add('V', on_vel_pid, "PID vel");
+    commander.add('T', on_str_pid, "PID str");
     commander.add('X', on_imu_offset, "imu offset");
 
     // commander.add('M', onMotor, "my motor");
@@ -680,3 +683,13 @@ void HAL::motor_init(void)
     }
 }
 
+void HAL::motor_set_speed(int speed, int steering)
+{
+    if (g_throttle != speed || g_steering != steering) {
+        log_e("speed: %d steering %d.", speed, steering);
+        g_throttle = (float)speed;
+        g_steering = (float)steering;
+        log_e("throttle: %.2f steering %.2f.", g_throttle, g_steering);
+    }
+    
+}
