@@ -17,6 +17,13 @@ BLDCDriver3PWM driver_1 = BLDCDriver3PWM(MO1_1, MO1_2, MO1_3);
 static float g_motor_0_offset = 0;
 static float g_motor_1_offset = 0;
 
+enum BALANCE_STATUS {
+    BALANCE_OFF,
+    BALANCE_WATTING,
+    BALANCE_RUNNING,
+};
+
+static BALANCE_STATUS g_balance_status = BALANCE_OFF;
 // low pass filters for user commands - throttle(油门) and steering
 LowPassFilter lpf_throttle = {
     .Tf = 0.5
@@ -27,6 +34,8 @@ LowPassFilter lpf_steering = {
 
 #define MOTOR_MAX_SPEED  100
 #define MOTOR_MAX_TORQUE 7
+#define BALANCE_WAITTING_TIME  1000
+#define BALANCE_STOP_PITCH_OFFSET 40
 // control algorithm parametersw
 // stabilisation pid
 // 初始值 P0.3 D: 0.02  -- 0.18 0.024
@@ -34,7 +43,7 @@ PIDController pid_stb{
     .P = 0.5, .I = 0, .D = 0.005, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE 
 }; 
-
+// P = 0.1 I= 0.08
 PIDController pid_vel{
     .P = 0.1, .I = 0.08, .D = 0.00, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE
@@ -361,10 +370,47 @@ static void motor_status_publish(struct motor_stat *ms, int id, bool is_outbound
     
 }
 
+static void motor_reset_all_pid()
+{
+    pid_stb.reset();
+    pid_vel.reset();
+    pid_steering.reset();
+}
+
+static int check_balance_status(float mpu_pitch)
+{
+    static unsigned long start_wait = 0;
+    
+    if (abs(mpu_pitch - g_offset_parameters) > BALANCE_STOP_PITCH_OFFSET) {
+        g_balance_status = BALANCE_OFF;
+        return -1;
+    }
+
+    if (g_balance_status == BALANCE_RUNNING) {
+        return 0;
+    }
+
+    if (g_balance_status == BALANCE_OFF) {
+        g_balance_status = BALANCE_WATTING;
+        start_wait = millis();
+        return -1;
+    }
+
+    if (g_balance_status == BALANCE_WATTING) {
+        if (millis() < start_wait + BALANCE_WAITTING_TIME) {
+            return -1;
+        }
+    }
+    motor_reset_all_pid();
+    g_balance_status = BALANCE_RUNNING;
+    return 0;
+}
+
 static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
                                 float throttle, float steering)
 {
     // float voltage_control;
+    int rc = 0;
     float speed = 0;
     float speed_adj  = 0;
     float stb_adj = 0;
@@ -373,6 +419,12 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
     HAL::imu_update();
     float mpu_pitch = HAL::imu_get_pitch();
     float mpu_yaw = HAL::imu_get_yaw();
+
+    if (rc = check_balance_status(mpu_pitch)) {
+        motor_l->target = 0;
+        motor_r->target = 0;
+        goto out;
+    }
 
     speed = (motor_l->shaft_velocity - motor_r->shaft_velocity) / 2;
     
@@ -392,17 +444,13 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
     motor_l->target = (all_adj + steering_adj);
     motor_r->target = -(all_adj - steering_adj);
 
-    if (abs(mpu_pitch - g_offset_parameters) > 40) {
-        motor_l->target = 0;
-        motor_r->target = 0;
-    }
-
+out:
     motor_l->move();
     motor_r->move();
 #else
     Serial.printf("pich: %0.2f, yaw : %0.2f %0.2f\n", mpu_pitch, mpu_yaw, all_adj);
 #endif
-    return 0;
+    return rc;
 }
 
 static int run_knob_task(BLDCMotor *motor, int id)
