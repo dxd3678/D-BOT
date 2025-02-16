@@ -67,6 +67,7 @@ namespace HAL
 
     void  imu_init(void);
     void  imu_update(void);
+    float imu_get_pitch(void);
     float imu_get_yaw(void);
 
     int wireless_param_init(wl_parm_cb cb);

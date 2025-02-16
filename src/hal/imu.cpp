@@ -41,7 +41,12 @@ void HAL::imu_update(void)
     // AccountSystem::imu_commit(&imuInfo);
 }
 
-float HAL::imu_get_yaw(void)
+float HAL::imu_get_pitch(void)
 {
     return mpu.getAngleY();
+}
+
+float HAL::imu_get_yaw(void)
+{
+    return mpu.getAngleZ();
 }

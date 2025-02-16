@@ -17,25 +17,34 @@ BLDCDriver3PWM driver_1 = BLDCDriver3PWM(MO1_1, MO1_2, MO1_3);
 static float g_motor_0_offset = 0;
 static float g_motor_1_offset = 0;
 
-// velocity control filtering
-LowPassFilter lpf_pitch_cmd = {
-    .Tf = 0.07
-};
 // low pass filters for user commands - throttle(油门) and steering
 LowPassFilter lpf_throttle = {
     .Tf = 0.5
 };
 LowPassFilter lpf_steering = {
-    .Tf = 0.1
+    .Tf = 0.5
 };
 
+#define MOTOR_MAX_SPEED  100
+#define MOTOR_MAX_TORQUE 7
 // control algorithm parametersw
 // stabilisation pid
 // 初始值 P0.3 D: 0.02  -- 0.18 0.024
-PIDController pid_stb{.P = 0.6, .I = 0, .D = 0.012, .ramp = 100000, .limit = 7}; 
-// velocity pid 速度PID P初始值1.5
-PIDController pid_vel{.P = 0, .I = 0, .D = 0.00, .ramp = 100000, .limit = 30};
-float g_offset_parameters = 2.2; // 偏置参数
+PIDController pid_stb{
+    .P = 0.5, .I = 0, .D = 0.005, .ramp = 100000, 
+    .limit = MOTOR_MAX_TORQUE 
+}; 
+
+PIDController pid_vel{
+    .P = 0.1, .I = 0.08, .D = 0.00, .ramp = 100000, 
+    .limit = MOTOR_MAX_TORQUE
+};
+PIDController pid_steering{
+    .P = 0, .I = 0, .D = 0.00, .ramp = 100000, 
+    .limit = MOTOR_MAX_TORQUE / 2
+};
+
+float g_offset_parameters = -4; // 偏置参数
 //目标变量
 float target_velocity = 0;
 #define MACHINE_MID_VALUE 1
@@ -206,11 +215,14 @@ void on_stb_pid(char* cmd){commander.pid(&pid_stb, cmd);}
 void on_vel_pid(char* cmd){commander.pid(&pid_vel, cmd);}
 void on_imu_offset(char *cmd)
 {
-    commander.scalar(&g_offset_parameters, cmd); 
+    commander.scalar(&g_offset_parameters, cmd);
     log_i("imu offset change to %.2f\n", g_offset_parameters);
 }
 
-void on_motor(char* cmd){commander.motor(&motor_0, cmd);}
+void on_motor(char* cmd){
+    commander.motor(&motor_0, cmd);
+    commander.motor(&motor_1, cmd);
+}
 // -------------monitor--------------------
 //目标变量
 static float readMySensorCallback(void) {
@@ -349,35 +361,46 @@ static void motor_status_publish(struct motor_stat *ms, int id, bool is_outbound
     
 }
 
-static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r, float throttle)
+static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
+                                float throttle, float steering)
 {
-    float steering = 0;
-    float voltage_control;
+    // float voltage_control;
+    float speed = 0;
+    float speed_adj  = 0;
+    float stb_adj = 0;
+    float steering_adj = 0;
+    float all_adj = 0;
     HAL::imu_update();
-    double mpu_yaw = HAL::imu_get_yaw();
+    float mpu_pitch = HAL::imu_get_pitch();
+    float mpu_yaw = HAL::imu_get_yaw();
 
-    voltage_control = lpf_pitch_cmd(pid_vel((motor_l->shaft_velocity + motor_r->shaft_velocity) / 2 - lpf_throttle(throttle)));
-    // float target_yaw = 0;
-    voltage_control = pid_stb(g_offset_parameters + mpu_yaw - voltage_control);
+    speed = (motor_l->shaft_velocity - motor_r->shaft_velocity) / 2;
+    
+    /* Cascade PID */
     // float voltage_control = pid_stb(Offset_parameters - mpu_pitch + target_pitch);
     // float steering_adj = lpf_steering(steering);
 
-    float steering_adj = lpf_steering(steering);
+    /* Parallel PID */
+    
+    // float target_yaw = 0;
+    stb_adj = pid_stb(g_offset_parameters - mpu_pitch);
+    speed_adj = pid_vel(speed - lpf_throttle(throttle));
+    steering_adj = pid_steering(lpf_steering(steering));
+    all_adj = stb_adj + speed_adj;
 
 #if MACHINE_MID_VALUE
-    motor_l->target = -(voltage_control - steering_adj);
-    motor_r->target = (voltage_control + steering_adj);
+    motor_l->target = (all_adj + steering_adj);
+    motor_r->target = -(all_adj - steering_adj);
 
-    if (abs(mpu_yaw - g_offset_parameters) > 40) {
+    if (abs(mpu_pitch - g_offset_parameters) > 40) {
         motor_l->target = 0;
         motor_r->target = 0;
-
     }
 
     motor_l->move();
     motor_r->move();
 #else
-    Serial.printf("yaw: %0.2f, %0.2f\n", mpu_yaw, voltage_control);
+    Serial.printf("pich: %0.2f, yaw : %0.2f %0.2f\n", mpu_pitch, mpu_yaw, all_adj);
 #endif
     return 0;
 }
@@ -483,15 +506,16 @@ void TaskMotorUpdate(void *pvParameters)
         motor_1.loopFOC();
         // run_knob_task(&motor_1, 1);
 
-        run_balance_task(&motor_0, &motor_1, 0);
-        // motor.move(1);
-        // motor_1.move(1);
+        run_balance_task(&motor_0, &motor_1, 0, 0);
+
+        // motor_0.move(10);
+        // motor_1.move(10);
 
         motor_0.monitor();
         // motor_0.monitor();
         commander.run();
         // Serial.println(motor_config[id].position);
-        vTaskDelay(5);
+        vTaskDelay(pdMS_TO_TICKS(5));
     }
     
 }
@@ -515,18 +539,18 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
     motor->controller = MotionControlType::torque;
 
     // 速度PI环设置
-    motor->PID_velocity.P = 1;
+    motor->PID_velocity.P = 0.6;
     motor->PID_velocity.I = 0;
-    motor->PID_velocity.D = 0.01;
+    motor->PID_velocity.D = 0.006;
 
     motor->PID_velocity.output_ramp = 10000;
-    motor->PID_velocity.limit = 10;
+    motor->PID_velocity.limit = MOTOR_MAX_SPEED;
     //最大电机限制电机
     motor->voltage_limit = 8;
     //速度低通滤波时间常数
     motor->LPF_velocity.Tf = 0.01;
     //设置最大速度限制
-    motor->velocity_limit = 10;
+    motor->velocity_limit = MOTOR_MAX_SPEED;
 
     motor->monitor_variables = _MON_TARGET | _MON_VEL | _MON_ANGLE;
 
@@ -590,7 +614,7 @@ void HAL::motor_init(void)
 
     commander.add('S', on_stb_pid, "PID stable");
     commander.add('V', on_vel_pid, "PID vel");
-    commander.add('O', on_imu_offset, "imu offset");
+    commander.add('X', on_imu_offset, "imu offset");
 
     // commander.add('M', onMotor, "my motor");
     actMotorStatus = new Account("MotorStatus", AccountSystem::Broker(), sizeof(MotorStatusInfo), nullptr);
