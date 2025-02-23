@@ -110,7 +110,7 @@ static long _map(long x, long in_min, long in_max, long out_min, long out_max) {
 
 static void controller_set_motor_status(void)
 {
-    int speed = 0, steering = 0, left_tmp, right_tmp;
+    int speed = 0, steering = 0;
     ble_parser = ble_ctrl.get_status();
 
     speed = _map(ble_parser->joyLVert, 0, 256, -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);

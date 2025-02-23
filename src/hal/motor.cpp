@@ -34,6 +34,7 @@ LowPassFilter lpf_steering = {
 
 #define MOTOR_MAX_TORQUE 7
 #define BALANCE_WAITTING_TIME  1000
+#define BALANCE_ENABLE_STEERING_I_TIME  2000
 #define BALANCE_STOP_PITCH_OFFSET 40
 // control algorithm parametersw
 // stabilisation pid
@@ -43,12 +44,21 @@ PIDController pid_stb{
     .limit = MOTOR_MAX_TORQUE 
 }; 
 // P = 0.1 I= 0.08
+#define PID_VEL_P (0.1)
+#define PID_VEL_I (0.02)
+#define PID_VEL_D (0.00)
 PIDController pid_vel{
-    .P = 0.1, .I = 0.08, .D = 0.00, .ramp = 100000, 
+    .P = PID_VEL_P, .I = PID_VEL_I, .D = PID_VEL_D, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE
 };
+
+PIDController pid_vel_tmp{
+    .P = PID_VEL_P, .I = PID_VEL_I, .D = PID_VEL_D, .ramp = 100000, 
+    .limit = MOTOR_MAX_TORQUE
+};
+
 PIDController pid_steering{
-    .P = 0, .I = 0, .D = 0.00, .ramp = 100000, 
+    .P = 0.1, .I = 0, .D = 0.00, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE / 2
 };
 
@@ -222,7 +232,10 @@ Commander commander = Commander(Serial, '\n', false);
 #endif
 
 void on_stb_pid(char* cmd){commander.pid(&pid_stb, cmd);}
-void on_vel_pid(char* cmd){commander.pid(&pid_vel, cmd);}
+void on_vel_pid(char* cmd){
+    commander.pid(&pid_vel, cmd);
+    commander.pid(&pid_vel_tmp, cmd);
+}
 void on_str_pid(char* cmd){commander.pid(&pid_steering, cmd);}
 void on_imu_offset(char *cmd)
 {
@@ -412,6 +425,7 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
                                 float throttle, float steering)
 {
     // float voltage_control;
+    static unsigned long ctlr_start_ms = 0; 
     int rc = 0;
     float speed = 0;
     float speed_adj  = 0;
@@ -438,13 +452,21 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
     
     // float target_yaw = 0;
     stb_adj = pid_stb(g_offset_parameters - mpu_pitch);
+    if (throttle != 0 || steering != 0) {
+        pid_vel.I = 0;
+        ctlr_start_ms = millis();
+    } else {
+        if (millis() > ctlr_start_ms + BALANCE_ENABLE_STEERING_I_TIME) {
+            pid_vel.I = pid_vel_tmp.I;
+        }
+    }
     speed_adj = pid_vel(speed - lpf_throttle(throttle));
     steering_adj = pid_steering(lpf_steering(steering));
     all_adj = stb_adj + speed_adj;
 
 #if MACHINE_MID_VALUE
-    motor_l->target = (all_adj + steering_adj);
-    motor_r->target = -(all_adj - steering_adj);
+    motor_l->target = (all_adj - steering_adj);
+    motor_r->target = -(all_adj + steering_adj);
 
 out:
     motor_l->move();
@@ -556,7 +578,7 @@ void TaskMotorUpdate(void *pvParameters)
         motor_1.loopFOC();
         // run_knob_task(&motor_1, 1);
 
-        run_balance_task(&motor_0, &motor_1, 0, g_steering);
+        run_balance_task(&motor_0, &motor_1, g_throttle, g_steering);
 
         // motor_0.move(10);
         // motor_1.move(10);
@@ -687,7 +709,7 @@ void HAL::motor_set_speed(int speed, int steering)
 {
     if (g_throttle != speed || g_steering != steering) {
         log_e("speed: %d steering %d.", speed, steering);
-        g_throttle = (float)speed;
+        g_throttle = (float)-speed;
         g_steering = (float)steering;
         log_e("throttle: %.2f steering %.2f.", g_throttle, g_steering);
     }
