@@ -4,27 +4,25 @@
 #include "Wire.h"
 #include "app/Accounts/Account_Master.h"
 
-static MPU6050 mpu(Wire);;
-
-void HAL::imu_init(void)
-{
-    Wire.begin(CONFIG_MPU_SDA, CONFIG_MPU_SCL, uint32_t(4000000));// Set I2C frequency to 400kHz
-    mpu.begin();
-    mpu.calcGyroOffsets(true);
-
-    log_d("imu init yaw offset : %0.2f\n", imu_get_yaw());
-}
-
+static MPU6050 mpu(Wire);
+// static float g_abs_yaw = 0;
 /*
  * roll --- x
  * yaw  --- y
  * pitch -- z
 */
-void HAL::imu_update(void)
-{
-    // imu_info_t imuInfo;
-    mpu.update();
 
+static TaskHandle_t handleTaskIMU;
+void HAL::imu_update(void *pvParameters)
+{
+    float yaw = 0;
+    static float last_yaw = 0;
+    while(1) {
+        mpu.update();
+
+        vTaskDelay(pdMS_TO_TICKS(5));
+        // log_e("yaw: %f, %f\n", yaw, g_abs_yaw);
+    }
     // imuInfo.ax = mpu.getAccX();
     // imuInfo.ay = mpu.getAccY();
     // imuInfo.az = mpu.getAccZ();
@@ -37,9 +35,35 @@ void HAL::imu_update(void)
     // imuInfo.roll = mpu.getAngleX();
     // imuInfo.yaw = mpu.getAngleY();
     // imuInfo.pitch = mpu.getAngleZ();
-    // log_d("yaw: %f\n", imuInfo.yaw);
+    
     // AccountSystem::imu_commit(&imuInfo);
 }
+
+void HAL::imu_init(void)
+{
+    int ret = 0;
+    // Set I2C frequency to 400kHz
+    Wire.begin(CONFIG_MPU_SDA, CONFIG_MPU_SCL, uint32_t(4000000));
+    mpu.begin();
+    mpu.calcGyroOffsets(true);
+
+    log_d("imu init pitch offset : %0.2f\n", imu_get_pitch());
+
+    ret = xTaskCreatePinnedToCore(
+        imu_update,
+        "IMUThread",
+        4096,
+        nullptr,
+        2,
+        &handleTaskIMU,
+        ESP32_RUNNING_CORE);
+    if (ret != pdPASS) {
+        log_e("start imu_run task failed.");
+        // return -1;
+    }
+}
+
+
 
 float HAL::imu_get_pitch(void)
 {
@@ -49,4 +73,9 @@ float HAL::imu_get_pitch(void)
 float HAL::imu_get_yaw(void)
 {
     return mpu.getAngleZ();
+}
+
+float HAL::imu_get_abs_yaw(void)
+{
+    return imu_get_yaw();
 }

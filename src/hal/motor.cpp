@@ -40,7 +40,7 @@ LowPassFilter lpf_steering = {
 // stabilisation pid
 // 初始值 P0.3 D: 0.02  -- 0.18 0.024
 PIDController pid_stb{
-    .P = 0.5, .I = 0, .D = 0.005, .ramp = 100000, 
+    .P = 0.3, .I = 0, .D = 0.008, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE 
 }; 
 // P = 0.1 I= 0.08
@@ -61,6 +61,8 @@ PIDController pid_steering{
     .P = 0.1, .I = 0, .D = 0.00, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE / 2
 };
+
+extern PIDController pid_bot;
 
 float g_offset_parameters = -4; // 偏置参数
 float g_throttle = 0;
@@ -237,6 +239,8 @@ void on_vel_pid(char* cmd){
     commander.pid(&pid_vel_tmp, cmd);
 }
 void on_str_pid(char* cmd){commander.pid(&pid_steering, cmd);}
+void on_bot_pid(char* cmd){commander.pid(&pid_bot, cmd);}
+
 void on_imu_offset(char *cmd)
 {
     commander.scalar(&g_offset_parameters, cmd);
@@ -432,7 +436,7 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
     float stb_adj = 0;
     float steering_adj = 0;
     float all_adj = 0;
-    HAL::imu_update();
+
     float mpu_pitch = HAL::imu_get_pitch();
     float mpu_yaw = HAL::imu_get_yaw();
 
@@ -687,6 +691,8 @@ void HAL::motor_init(void)
     commander.add('S', on_stb_pid, "PID stable");
     commander.add('V', on_vel_pid, "PID vel");
     commander.add('T', on_str_pid, "PID str");
+    commander.add('B', on_bot_pid, "PID bot");
+    
     commander.add('X', on_imu_offset, "imu offset");
 
     // commander.add('M', onMotor, "my motor");
@@ -705,13 +711,37 @@ void HAL::motor_init(void)
     }
 }
 
+double HAL::motor_get_cur_angle(void)
+{
+    /* 弧度转角度 */
+    return motor_0.shaft_angle * 180 / PI;
+}
+
 void HAL::motor_set_speed(int speed, int steering)
 {
     if (g_throttle != speed || g_steering != steering) {
-        log_e("speed: %d steering %d.", speed, steering);
+        // log_e("speed: %d steering %d.", speed, steering);
+
+        if (speed < -MOTOR_MAX_SPEED) {
+            speed = -MOTOR_MAX_SPEED;
+        }
+        if (speed > MOTOR_MAX_SPEED) {
+            speed = MOTOR_MAX_SPEED;
+        }
+
+        if (steering < -MOTOR_MAX_SPEED) {
+            steering = -MOTOR_MAX_SPEED;
+        }
+        if (steering > MOTOR_MAX_SPEED) {
+            steering = MOTOR_MAX_SPEED;
+        }
+
         g_throttle = (float)-speed;
         g_steering = (float)steering;
-        log_e("throttle: %.2f steering %.2f.", g_throttle, g_steering);
+        // log_e("throttle: %.2f steering %.2f.", g_throttle, g_steering);
+#ifdef XK_WIRELESS_PARAMETER
+        wireless.printf("throttle: %.2f steering %.2f.\n", g_throttle, g_steering);
+#endif
     }
     
 }
