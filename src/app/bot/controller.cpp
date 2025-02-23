@@ -10,6 +10,7 @@
 #include "ble_ctrl.h"
 #include "button_event.h"
 #include <Arduino.h>
+#include "bot.h"
 
 static BLECtrl ble_ctrl;
 static BLEControllerNotificationParser *ble_parser;
@@ -61,13 +62,14 @@ static inline bool btn_dir_right_is_push(void)
 static void controller_btn_a_handler(ButtonEvent* btn, int event)
 {
     if (event == ButtonEvent::EVENT_PRESSED) {
-       
+        x_rebot.spin(90);
     }
 }
 
 static void controller_btn_b_handler(ButtonEvent* btn, int event)
 {
     if (event == ButtonEvent::EVENT_PRESSED) {
+        x_rebot.move(10);
     }
 }
 
@@ -111,17 +113,26 @@ static long _map(long x, long in_min, long in_max, long out_min, long out_max) {
 static void controller_set_motor_status(void)
 {
     int speed = 0, steering = 0;
+    static int last_speed = 0, last_steering = 0;
     ble_parser = ble_ctrl.get_status();
 
     speed = _map(ble_parser->joyLVert, 0, 256, -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
-    steering = _map(ble_parser->joyLHori, 0, 256, -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
+    steering = _map(ble_parser->joyRHori, 0, 256, -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
 
+    if (speed == 0 && last_speed == 0 && steering == 0 && last_steering == 0) {
+        // no change
+        return;
+    }
+    last_speed = speed;
+    last_steering = steering;
     HAL::motor_set_speed(speed, steering);
 }
 
 void controller_update_task(void *parameter)
 {
     while(1) {
+        btn_a.EventMonitor(btn_a_is_push());
+        btn_b.EventMonitor(btn_b_is_push());
         btn_dir_up.EventMonitor(btn_dir_up_is_push());
         btn_dir_down.EventMonitor(btn_dir_down_is_push());
         btn_dir_left.EventMonitor(btn_dir_left_is_push());

@@ -39,6 +39,7 @@ namespace HAL
     void update_motor_mode(int id, int mode , int init_position);
     void motor_shake(int id, int strength, int delay_time);
     void motor_set_speed(int speed, int steering);
+    double motor_get_cur_angle(void);
 
     void surface_dial_init(void);
     void surface_dial_update(SuperDialMotion direction);
@@ -69,7 +70,8 @@ namespace HAL
     void system_led_run(unsigned long currentMillis);
 
     void  imu_init(void);
-    void  imu_update(void);
+    void  imu_update(void *pvParameters);
+    float imu_get_abs_yaw(void);
     float imu_get_pitch(void);
     float imu_get_yaw(void);
 
