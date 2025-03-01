@@ -21,7 +21,7 @@ void HAL::imu_update(void *pvParameters)
         mpu.update();
 
         vTaskDelay(pdMS_TO_TICKS(5));
-        // log_e("yaw: %f, %f\n", yaw, g_abs_yaw);
+        // log_e("yaw: %f, %f, %f, %f\n", yaw,  mpu.getGyroX(),  mpu.getGyroY(),  mpu.getGyroZ());
     }
     // imuInfo.ax = mpu.getAccX();
     // imuInfo.ay = mpu.getAccY();
@@ -73,6 +73,16 @@ float HAL::imu_get_pitch(void)
 float HAL::imu_get_yaw(void)
 {
     return mpu.getAngleZ();
+}
+
+/*
+ * getGyroY = pitch
+ * getGyroZ = yaw
+ * 
+ */
+float HAL::imu_get_gyro_z(void)
+{
+    return mpu.getGyroZ();
 }
 
 float HAL::imu_get_abs_yaw(void)

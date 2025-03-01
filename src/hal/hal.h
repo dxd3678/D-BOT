@@ -20,6 +20,7 @@ typedef enum {
 } HassMotion;
 
 #define MOTOR_MAX_SPEED  10
+#define BOT_MAX_STEERING 600
 
 typedef int (*wl_parm_cb)(char *);
 
@@ -38,7 +39,7 @@ namespace HAL
     int get_motor_position(int id);
     void update_motor_mode(int id, int mode , int init_position);
     void motor_shake(int id, int strength, int delay_time);
-    void motor_set_speed(int speed, int steering);
+    void motor_set_speed(float speed, float steering);
     double motor_get_cur_angle(void);
 
     void surface_dial_init(void);
@@ -74,6 +75,7 @@ namespace HAL
     float imu_get_abs_yaw(void);
     float imu_get_pitch(void);
     float imu_get_yaw(void);
+    float imu_get_gyro_z(void);
 
     int wireless_param_init(wl_parm_cb cb);
 }

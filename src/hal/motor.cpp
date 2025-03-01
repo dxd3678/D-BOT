@@ -58,7 +58,7 @@ PIDController pid_vel_tmp{
 };
 
 PIDController pid_steering{
-    .P = 0.1, .I = 0, .D = 0.00, .ramp = 100000, 
+    .P = 0.01, .I = 0, .D = 0.00, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE / 2
 };
 
@@ -439,6 +439,7 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
 
     float mpu_pitch = HAL::imu_get_pitch();
     float mpu_yaw = HAL::imu_get_yaw();
+    float gyro_z = HAL::imu_get_gyro_z();
 
     if (rc = check_balance_status(mpu_pitch)) {
         motor_l->target = 0;
@@ -465,12 +466,12 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
         }
     }
     speed_adj = pid_vel(speed - lpf_throttle(throttle));
-    steering_adj = pid_steering(lpf_steering(steering));
+    steering_adj = pid_steering(lpf_steering(steering) - gyro_z);
     all_adj = stb_adj + speed_adj;
 
 #if MACHINE_MID_VALUE
-    motor_l->target = (all_adj - steering_adj);
-    motor_r->target = -(all_adj + steering_adj);
+    motor_l->target = (all_adj + steering_adj);
+    motor_r->target = -(all_adj - steering_adj);
 
 out:
     motor_l->move();
@@ -717,7 +718,7 @@ double HAL::motor_get_cur_angle(void)
     return motor_0.shaft_angle * 180 / PI;
 }
 
-void HAL::motor_set_speed(int speed, int steering)
+void HAL::motor_set_speed(float speed, float steering)
 {
     if (g_throttle != speed || g_steering != steering) {
         // log_e("speed: %d steering %d.", speed, steering);
@@ -729,11 +730,11 @@ void HAL::motor_set_speed(int speed, int steering)
             speed = MOTOR_MAX_SPEED;
         }
 
-        if (steering < -MOTOR_MAX_SPEED) {
-            steering = -MOTOR_MAX_SPEED;
+        if (steering < -BOT_MAX_STEERING) {
+            steering = -BOT_MAX_STEERING;
         }
-        if (steering > MOTOR_MAX_SPEED) {
-            steering = MOTOR_MAX_SPEED;
+        if (steering > BOT_MAX_STEERING) {
+            steering = BOT_MAX_STEERING;
         }
 
         g_throttle = (float)-speed;

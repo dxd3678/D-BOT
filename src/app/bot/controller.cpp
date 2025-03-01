@@ -117,7 +117,7 @@ static void controller_set_motor_status(void)
     ble_parser = ble_ctrl.get_status();
 
     speed = _map(ble_parser->joyLVert, 0, 256, -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
-    steering = _map(ble_parser->joyRHori, 0, 256, -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
+    steering = _map(ble_parser->joyRHori, 0, 256, -BOT_MAX_STEERING, BOT_MAX_STEERING);
 
     if (speed == 0 && last_speed == 0 && steering == 0 && last_steering == 0) {
         // no change
