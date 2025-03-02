@@ -21,6 +21,12 @@ typedef struct
     uint16_t time;
 } Recorder_Info_t;
 
+/* MusicPlayer */
+typedef struct
+{
+    const char* music;
+} MusicPlayer_Info_t;
+
 /* Storage */
 typedef enum
 {

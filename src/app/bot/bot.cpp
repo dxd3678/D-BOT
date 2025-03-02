@@ -17,7 +17,7 @@ int g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
 #define BOT_MOVE_END_OFFSET (10)
 #define BOT_SPIN_END_OFFSET (2)
 PIDController pid_bot_s {
-    .P = 0.5, .I = 0, .D = 0.005, .ramp = 100000, 
+    .P = 5, .I = 0, .D = 0.005, .ramp = 100000, 
     .limit = BOT_MAX_STEERING
 };
 
@@ -61,10 +61,12 @@ void xbot_thread(void* argument)
     while(1) {
         if (x_rebot.hasCmd()) {
             cmd = x_rebot.popCommand();
+            HAL::audio_play_music("DeviceInsert");
             while (cmd.status != CommandStatus::COMPLETED) {
                 rc = execute_cmd(cmd);
                 vTaskDelay(pdMS_TO_TICKS(5));
             }
+            HAL::audio_play_music("DevicePullout");
         } else {
             vTaskDelay(pdMS_TO_TICKS(50));
         }

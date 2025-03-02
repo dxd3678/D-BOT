@@ -19,6 +19,7 @@ void HAL::Init()
     // power_init();
     buzz_init();
     buzz_tone(700, 30);
+    audio_init();
     delay(2000);
     log_i("init system...");
     system_init();
@@ -43,6 +44,7 @@ void HAL::Update()
     // __IntervalExecute(HAL::knob_update(), 10);
 
     system_led_run(currentMillis);
+    audio_update();
     // imu_update();
     // HAL::TaskMotorUpdate(NULL);
 }

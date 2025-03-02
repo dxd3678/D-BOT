@@ -66,7 +66,10 @@ namespace HAL
 
     void buzz_set_enable(bool en);
     void buzz_init(void);
-    void buzz_tone(uint32_t _freq, int32_t _duration);
+    void buzz_tone(uint32_t _freq, int32_t _duration = 0);
+    void audio_init(void);
+    void audio_update(void);
+    bool audio_play_music(const char* name);
 
     void system_led_init(void);
     void system_led_run(unsigned long currentMillis);

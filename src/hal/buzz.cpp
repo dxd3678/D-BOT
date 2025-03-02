@@ -24,7 +24,7 @@ void HAL::buzz_init(void)
 {
     pinMode(CONFIG_BUZZ_PIN, OUTPUT);
     ledcAttachPin(CONFIG_BUZZ_PIN, CONFIG_BUZZ_CHANNEL);
-    ledcSetup(CONFIG_BUZZ_CHANNEL, 0, 8);
+    ledcSetup(CONFIG_BUZZ_CHANNEL, 10000, 8);
     ledcWriteTone(CONFIG_BUZZ_CHANNEL, 0);
     IsEnable = true;
     // Create Buzzer thread

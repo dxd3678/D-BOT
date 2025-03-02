@@ -8,3 +8,4 @@ ACT_DEF(StatusBar, 0);
 ACT_DEF(SysConfig, 0);
 ACT_DEF(Motor, 0);
 ACT_DEF(IMU, sizeof(HAL::imu_info_t));
+ACT_DEF(MusicPlayer, 0);

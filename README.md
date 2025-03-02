@@ -4,19 +4,6 @@
 </div>
 
 
-# 一些工具
-
-批量转换图片为 bin 格式工具： [W-Mai/lvgl_image_converter](https://github.com/W-Mai/lvgl_image_converter)
-
-```bash
-image_path="/d/Workspaces/Resources/KnobBot/Images/"
-python lv_img_conv.py -f true_color_alpha -cf RGB565SWAP -ff BIN -o $image_path/out/ $image_path
-
-# 快速重命名
-counter=1; for file in wink*; do new_name=$(printf "wink%04d.bin" $counter); mv $file $new_name; ((counter++)); done
-```
-
-
 # 无线调参
 
 | 对象 | 命令 | 示例 |
@@ -63,3 +50,19 @@ xtensa-esp32s3-elf-addr2line.exe -pfiaC -e .pio/build/esp32-s3-devkitc-1/firmwar
 # 致谢开源
 
 - [Super_Balance](https://gitee.com/handmade-rice/Super_Balance): 手工饭开源平衡车；本项目的结构和小车平衡控制主要参考此项目
+
+
+
+# 一些工具
+
+1. 批量转换图片为 bin 格式工具： [W-Mai/lvgl_image_converter](https://github.com/W-Mai/lvgl_image_converter)
+
+```bash
+image_path="/d/Workspaces/Resources/DBot/Images/"
+python lv_img_conv.py -f true_color_alpha -cf RGB565SWAP -ff BIN -o $image_path/out/ $image_path
+
+# 快速重命名
+counter=1; for file in wink*; do new_name=$(printf "wink%04d.bin" $counter); mv $file $new_name; ((counter++)); done
+```
+
+2. [在线钢琴模拟器](https://www.xiwnn.com/piano/)
