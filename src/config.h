@@ -42,6 +42,8 @@
 #define LCD_BK_DEFAULT_BRIGHTNESS  50
 #define LCD_BK_DEFAULT_TIMEOUT     5
 
+/* system */
+#define SYSTEM_CALIBRATION_BUTTON_PIN  0
 
 /* Buzzer */
 #define CONFIG_BUZZ_PIN             18

@@ -153,3 +153,52 @@ void set_mqtt_config(String host, uint16_t port, String username,
     log_d("set MQTT_PASSWORD_KEY Config: %s\n", password.c_str() );
     log_d("set MQTT_TPOIC_KEY Config: %s\n", topic.c_str() );
 }
+
+void set_imu_config(float gyroXoffset, float gyroYoffset, float gyroZoffset)
+{
+    Preferences prefs;     
+    prefs.begin(IMU_CONFIG); 
+    prefs.putFloat(IMU_GYRO_X_OFFSET, gyroXoffset);
+    prefs.putFloat(IMU_GYRO_Y_OFFSET, gyroYoffset);
+    prefs.putFloat(IMU_GYRO_Z_OFFSET, gyroZoffset);
+    prefs.end();
+}
+
+int get_imu_offset(struct imu_offset* offset) 
+{
+    Preferences preferences;
+    int rc = 0;
+
+    if (preferences.begin(IMU_CONFIG) == false) {
+        return -1;
+    }
+
+    offset->xoffset = preferences.getFloat(IMU_GYRO_X_OFFSET, 0.0);
+    offset->yoffset = preferences.getFloat(IMU_GYRO_Y_OFFSET, 0.0);
+    offset->zoffset = preferences.getFloat(IMU_GYRO_Z_OFFSET, 0.0);
+    preferences.end();
+
+    return 0;
+}
+
+void nvs_set_motor_config(float motor_l_offset, float motor_r_offset)
+{
+    Preferences prefs;
+    prefs.begin(MOTOR_CONFIG); 
+    prefs.putFloat(MOTOR_LEFT_OFFSET, motor_l_offset);
+    prefs.putFloat(MOTOR_RIGHT_OFFSET, motor_r_offset);
+    prefs.end();
+}
+
+int nvs_get_motor_offset(struct motor_offset *offset) 
+{
+    Preferences preferences;
+    if (preferences.begin(MOTOR_CONFIG) == false) {
+        return -1;
+    }
+    offset->l_offset = preferences.getFloat(MOTOR_LEFT_OFFSET, 0.0);
+    offset->r_offset = preferences.getFloat(MOTOR_RIGHT_OFFSET, 0.0);
+    preferences.end();
+
+    return 0;
+}

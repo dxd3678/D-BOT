@@ -659,6 +659,7 @@ void HAL::motor_init(void)
 {
 
     int ret = 0;
+    bool has_set_offset = false;
     log_i("Motor starting...");
     pinMode(MT6701_SS_0, OUTPUT);
     digitalWrite(MT6701_SS_0, HIGH); 
@@ -680,9 +681,26 @@ void HAL::motor_init(void)
     // ret = wireless.begin("ESP_DINGMOS", "12344321", AP_MODE);
 #endif
 
-    motor_initFOC(&motor_0, g_motor_0_offset);
-    motor_initFOC(&motor_1, g_motor_1_offset);
-
+    log_i("[motor]: calibration %s", g_system_calibration?"true":"false");
+    if (g_system_calibration == false) {
+        struct motor_offset offset;
+        if(nvs_get_motor_offset(&offset) == 0) {
+            log_i("[motor]: set offset %f, %f", offset.l_offset, offset.r_offset);
+            motor_initFOC(&motor_0, offset.l_offset);
+            motor_initFOC(&motor_1, offset.r_offset);
+            has_set_offset = true;
+        } else {
+            log_i("motor: get config failed, try auto calibration.");
+        }
+       
+    } 
+    if (!has_set_offset) {
+        motor_initFOC(&motor_0, 0);
+        motor_initFOC(&motor_1, 0);
+        nvs_set_motor_config(motor_0.zero_electric_angle, 
+                            motor_1.zero_electric_angle);
+    }
+    
     log_i("Motor ready.");
     log_i("Set the target velocity using serial terminal:");
 

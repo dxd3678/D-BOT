@@ -3,6 +3,7 @@
 #include "hal/HAL_Def.h"
 #include "Wire.h"
 #include "app/Accounts/Account_Master.h"
+#include "nvs.h"
 
 static MPU6050 mpu(Wire);
 // static float g_abs_yaw = 0;
@@ -42,10 +43,26 @@ void HAL::imu_update(void *pvParameters)
 void HAL::imu_init(void)
 {
     int ret = 0;
+    bool is_set_offset = false;
     // Set I2C frequency to 400kHz
     Wire.begin(CONFIG_MPU_SDA, CONFIG_MPU_SCL, uint32_t(4000000));
     mpu.begin();
-    mpu.calcGyroOffsets(true);
+    if (!g_system_calibration) {
+        struct imu_offset offset;
+        int ret = get_imu_offset(&offset);
+        if (ret == 0) {
+            log_i("mpu get offset: %f, %f, %f", offset.xoffset, offset.yoffset,
+                                     offset.zoffset);
+            mpu.setGyroOffsets(offset.xoffset, offset.yoffset, offset.zoffset);
+            is_set_offset = true;
+        }
+    }
+
+    if (!is_set_offset) {
+        mpu.calcGyroOffsets(true);
+        set_imu_config(mpu.getGyroXoffset(), mpu.getGyroYoffset(), 
+                                mpu.getGyroYoffset());
+    }
 
     log_d("imu init pitch offset : %0.2f\n", imu_get_pitch());
 

@@ -20,6 +20,15 @@
 #define MQTT_PASSWORD_KEY        "mqtt_password"
 #define MQTT_TPOIC_KEY           "mqtt_topic"
 
+#define IMU_CONFIG               "imu_config"
+#define IMU_GYRO_X_OFFSET        "xoffset"
+#define IMU_GYRO_Y_OFFSET        "yoffset"
+#define IMU_GYRO_Z_OFFSET        "zoffset"
+
+#define MOTOR_CONFIG             "motor_config"
+#define MOTOR_LEFT_OFFSET        "motor_l_offset"
+#define MOTOR_RIGHT_OFFSET       "motor_r_offset"
+
 typedef struct {
     bool init_ffat_flag;
     String wifi_ssid;
@@ -33,6 +42,17 @@ typedef struct {
     int lcd_bk_brightness;
 } NvsConfig;
 
+struct imu_offset {
+    float xoffset;
+    float yoffset;
+    float zoffset;
+};
+
+struct motor_offset {
+    float l_offset;
+    float r_offset;
+};
+
 void nvs_init();
 uint8_t get_init_ffat();
 void set_init_ffat(uint8_t value);
@@ -44,5 +64,8 @@ void get_wifi_config(String &ssid,String &password);
 void set_wifi_config(String ssid,String password);
 void get_mqtt_config(String &host,uint16_t &port,String &username,String &password,String &topic);
 void set_mqtt_config(String host,uint16_t port,String username,String password,String topic);
-
+void set_imu_config(float gyroXoffset, float gyroYoffset, float gyroZoffset);
+int get_imu_offset(struct imu_offset *offset);
+void nvs_set_motor_config(float motor_l_offset, float motor_r_offset);
+int nvs_get_motor_offset(struct motor_offset *offset);
 #endif

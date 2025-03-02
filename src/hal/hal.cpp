@@ -17,13 +17,17 @@ void HAL::Init()
     if (disp_draw_buf == nullptr)
         Serial.printf("lv_port_disp_init malloc failed!\n");
     // power_init();
+    buzz_init();
+    buzz_tone(700, 30);
+    delay(2000);
+    log_i("init system...");
+    system_init();
     log_i("init mpu...");
     imu_init();
     log_i("init motor...");
     motor_init();
-    system_led_init();
-    buzz_init();
-    buzz_tone(700, 30);
+    
+    
     tf.init();
     String test_content = tf.readFileLine("/dingmos_test.txt", 1);        // line-1 for WiFi ssid
     log_i("read test file: %s", test_content.c_str());
