@@ -14,9 +14,6 @@ BLDCDriver3PWM driver = BLDCDriver3PWM(MO0_1, MO0_2, MO0_3);
 BLDCMotor motor_1 = BLDCMotor(7);
 BLDCDriver3PWM driver_1 = BLDCDriver3PWM(MO1_1, MO1_2, MO1_3);
 
-static float g_motor_0_offset = 0;
-static float g_motor_1_offset = 0;
-
 enum BALANCE_STATUS {
     BALANCE_OFF,
     BALANCE_WATTING,
@@ -62,9 +59,10 @@ PIDController pid_steering{
     .limit = MOTOR_MAX_TORQUE / 2
 };
 
-extern PIDController pid_bot;
+extern PIDController pid_bot_s;
+extern PIDController pid_bot_m;
 
-float g_offset_parameters = -4; // 偏置参数
+float g_offset_parameters = -3; // 偏置参数
 float g_throttle = 0;
 float g_steering = 0;
 //目标变量
@@ -239,8 +237,8 @@ void on_vel_pid(char* cmd){
     commander.pid(&pid_vel_tmp, cmd);
 }
 void on_str_pid(char* cmd){commander.pid(&pid_steering, cmd);}
-void on_bot_pid(char* cmd){commander.pid(&pid_bot, cmd);}
-
+void on_bot_s_pid(char* cmd){commander.pid(&pid_bot_s, cmd);}
+void on_bot_m_pid(char* cmd){commander.pid(&pid_bot_m, cmd);}
 void on_imu_offset(char *cmd)
 {
     commander.scalar(&g_offset_parameters, cmd);
@@ -710,7 +708,8 @@ void HAL::motor_init(void)
     commander.add('S', on_stb_pid, "PID stable");
     commander.add('V', on_vel_pid, "PID vel");
     commander.add('T', on_str_pid, "PID str");
-    commander.add('B', on_bot_pid, "PID bot");
+    commander.add('B', on_bot_s_pid, "PID bot spin");
+    commander.add('R', on_bot_m_pid, "PID bot move");
     
     commander.add('X', on_imu_offset, "imu offset");
 
@@ -756,7 +755,7 @@ void HAL::motor_set_speed(float speed, float steering)
         }
 
         g_throttle = (float)-speed;
-        g_steering = (float)steering;
+        g_steering = (float)-steering;
         // log_e("throttle: %.2f steering %.2f.", g_throttle, g_steering);
 #ifdef XK_WIRELESS_PARAMETER
         wireless.printf("throttle: %.2f steering %.2f.\n", g_throttle, g_steering);

@@ -62,20 +62,26 @@ static inline bool btn_dir_right_is_push(void)
 static void controller_btn_a_handler(ButtonEvent* btn, int event)
 {
     if (event == ButtonEvent::EVENT_PRESSED) {
-        x_rebot.spin(90);
+        g_bot_ctrl_type++;
+        if (g_bot_ctrl_type >= BOT_CONTROL_TYPE_MAX) {
+            g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
+        }
+        log_i("channge to %d control type", g_bot_ctrl_type);
     }
 }
 
 static void controller_btn_b_handler(ButtonEvent* btn, int event)
 {
     if (event == ButtonEvent::EVENT_PRESSED) {
-        x_rebot.move(10);
+        g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
+        x_rebot.spin(90);
     }
 }
 
 static void controller_btn_dir_up_handler(ButtonEvent* btn, int event)
 {
     if (event == ButtonEvent::EVENT_PRESSED) {
+        
     }
 }
 
@@ -114,17 +120,22 @@ static void controller_set_motor_status(void)
 {
     int speed = 0, steering = 0;
     static int last_speed = 0, last_steering = 0;
+
+    if (g_bot_ctrl_type != BOT_CONTROL_TYPE_JOYSTICKS) {
+        return;
+    }
+    
     ble_parser = ble_ctrl.get_status();
 
     speed = _map(ble_parser->joyLVert, 0, 256, -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
     steering = _map(ble_parser->joyRHori, 0, 256, -BOT_MAX_STEERING, BOT_MAX_STEERING);
 
-    if (speed == 0 && last_speed == 0 && steering == 0 && last_steering == 0) {
-        // no change
-        return;
-    }
-    last_speed = speed;
-    last_steering = steering;
+    // if (speed == 0 && last_speed == 0 && steering == 0 && last_steering == 0) {
+    //     // no change
+    //     return;
+    // }
+    // last_speed = speed;
+    // last_steering = steering;
     HAL::motor_set_speed(speed, steering);
 }
 

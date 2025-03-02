@@ -10,12 +10,18 @@
 #include "hal/hal.h"
 
 XBot x_rebot(0, 0);
+int g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
 
 #define WHEEL_DIAMETER 6
 #define WHEEL_CIRCUMFERENCE (WHEEL_DIAMETER * M_PI)
 #define BOT_MOVE_END_OFFSET (10)
 #define BOT_SPIN_END_OFFSET (2)
-PIDController pid_bot {
+PIDController pid_bot_s {
+    .P = 0.5, .I = 0, .D = 0.005, .ramp = 100000, 
+    .limit = BOT_MAX_STEERING
+};
+
+PIDController pid_bot_m {
     .P = 0.5, .I = 0, .D = 0.005, .ramp = 100000, 
     .limit = MOTOR_MAX_SPEED
 }; 
@@ -89,18 +95,17 @@ int XBot::setTargetValue(Command& cmd, double target)
 
 int XBot::cmdExe(const Command &cmd, double cur)
 {
-    float pid_out = 0, speed = 0, steering = 0;
+    float speed = 0, steering = 0;
     float end_offset = 0;
     bool done = false;
-    pid_out = pid_bot(cur - cmd.target_value);
 
     switch (cmd.type) {
         case CommandType::SPIN:
-            steering = pid_out;
+            steering = pid_bot_s(cur - cmd.target_value);
             end_offset = BOT_SPIN_END_OFFSET;
             break;
         case CommandType::MOVE:
-            speed = pid_out;
+            speed = pid_bot_m(cur - cmd.target_value);;
             end_offset = BOT_MOVE_END_OFFSET;
             break;
     }

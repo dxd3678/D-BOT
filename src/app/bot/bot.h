@@ -14,6 +14,15 @@
 
 #include <SimpleFOC.h>
 
+
+enum bot_control_type {
+    BOT_CONTROL_TYPE_AI,
+    BOT_CONTROL_TYPE_JOYSTICKS,
+    BOT_CONTROL_TYPE_MAX,
+};
+
+extern int g_bot_ctrl_type;
+
 enum class CommandType {
     SPIN,
     MOVE

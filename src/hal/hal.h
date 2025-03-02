@@ -19,8 +19,8 @@ typedef enum {
     HASS_MAX,
 } HassMotion;
 
-#define MOTOR_MAX_SPEED  10
-#define BOT_MAX_STEERING 600
+#define MOTOR_MAX_SPEED  20
+#define BOT_MAX_STEERING 500
 
 typedef int (*wl_parm_cb)(char *);
 
