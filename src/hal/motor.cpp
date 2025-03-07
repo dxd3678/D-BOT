@@ -31,7 +31,7 @@ LowPassFilter lpf_steering = {
 
 #define MOTOR_MAX_TORQUE 7
 #define BALANCE_WAITTING_TIME  1000
-#define BALANCE_ENABLE_STEERING_I_TIME  2000
+#define BALANCE_ENABLE_STEERING_I_TIME  3000
 #define BALANCE_STOP_PITCH_OFFSET 40
 // control algorithm parametersw
 // stabilisation pid
@@ -463,14 +463,18 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
             pid_vel.I = pid_vel_tmp.I;
         }
     }
-    speed_adj = pid_vel(speed - lpf_throttle(throttle));
-    steering_adj = pid_steering(lpf_steering(steering) - gyro_z);
-    all_adj = stb_adj + speed_adj;
 
+    speed_adj = pid_vel(speed - lpf_throttle(throttle));
+    steering_adj = pid_steering(lpf_steering(steering) - 0);
+    all_adj = stb_adj + speed_adj;
+    
 #if MACHINE_MID_VALUE
     motor_l->target = (all_adj + steering_adj);
     motor_r->target = -(all_adj - steering_adj);
-
+    // if (steering != 0) 
+    //     wireless.printf("steering: %f, gyro_z: %f std: %f, speed: %f, steering: %f, left: %f, right: %f.\n", 
+    //                 steering, gyro_z, stb_adj, speed_adj, steering_adj, 
+    //                 motor_l->target, motor_r->target);
 out:
     motor_l->move();
     motor_r->move();
@@ -758,7 +762,7 @@ void HAL::motor_set_speed(float speed, float steering)
         g_steering = (float)-steering;
         // log_e("throttle: %.2f steering %.2f.", g_throttle, g_steering);
 #ifdef XK_WIRELESS_PARAMETER
-        wireless.printf("throttle: %.2f steering %.2f.\n", g_throttle, g_steering);
+        // wireless.printf("throttle: %.2f steering %.2f.\n", g_throttle, g_steering);
 #endif
     }
     

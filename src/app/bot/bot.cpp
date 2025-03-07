@@ -15,9 +15,10 @@ int g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
 #define WHEEL_DIAMETER 6
 #define WHEEL_CIRCUMFERENCE (WHEEL_DIAMETER * M_PI)
 #define BOT_MOVE_END_OFFSET (10)
-#define BOT_SPIN_END_OFFSET (2)
+#define BOT_SPIN_END_OFFSET (1)
+#define BOT_ACTION_END_TIME (500)
 PIDController pid_bot_s {
-    .P = 5, .I = 0, .D = 0.005, .ramp = 100000, 
+    .P = 6, .I = 0, .D = 2, .ramp = 100000, 
     .limit = BOT_MAX_STEERING
 };
 
@@ -34,7 +35,8 @@ static int execute_cmd(Command& cmd)
     switch (cmd.type) {
         case CommandType::SPIN:
             abs_yaw = HAL::imu_get_abs_yaw();
-            x_rebot.setTargetValue(cmd, cmd.value + abs_yaw);
+            // actual yaw need to be x2
+            x_rebot.setTargetValue(cmd, cmd.value * 2 + abs_yaw);
             cmd.status = CommandStatus::EXECUTING;
             cur = abs_yaw;
             break;
@@ -62,6 +64,8 @@ void xbot_thread(void* argument)
         if (x_rebot.hasCmd()) {
             cmd = x_rebot.popCommand();
             HAL::audio_play_music("DeviceInsert");
+            pid_bot_s.reset();
+            pid_bot_m.reset();
             while (cmd.status != CommandStatus::COMPLETED) {
                 rc = execute_cmd(cmd);
                 vTaskDelay(pdMS_TO_TICKS(5));
@@ -100,6 +104,7 @@ int XBot::cmdExe(const Command &cmd, double cur)
     float speed = 0, steering = 0;
     float end_offset = 0;
     bool done = false;
+    static uint64_t end_time = 0;
 
     switch (cmd.type) {
         case CommandType::SPIN:
@@ -111,9 +116,14 @@ int XBot::cmdExe(const Command &cmd, double cur)
             end_offset = BOT_MOVE_END_OFFSET;
             break;
     }
-
+    
     // Tmp cmd end condition
-    if (abs(cmd.target_value - cur) <= end_offset) {
+    if (abs(cmd.target_value - cur) > end_offset) {
+        end_time = millis();
+    }
+    wireless.printf("target: %.2f current %.2f, output: %.2f, %.2f.\n", 
+                cmd.target_value, cur, steering, speed);
+    if (millis() > end_time + BOT_ACTION_END_TIME) {
         done = true;
         speed = 0;
         steering = 0;

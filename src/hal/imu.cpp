@@ -22,7 +22,8 @@ void HAL::imu_update(void *pvParameters)
         mpu.update();
 
         vTaskDelay(pdMS_TO_TICKS(5));
-        // log_e("yaw: %f, %f, %f, %f\n", yaw,  mpu.getGyroX(),  mpu.getGyroY(),  mpu.getGyroZ());
+        // log_e("yaw : %f, %f, %f, %f\n", yaw,  mpu.getGyroX(),  mpu.getGyroY(),  mpu.getGyroZ());
+        // log_e("yaw(Z): %f roll(X): %f, pitch(Y): %f.", mpu.getAngleZ(),  mpu.getAngleX(), mpu.getAngleY());
     }
     // imuInfo.ax = mpu.getAccX();
     // imuInfo.ay = mpu.getAccY();
@@ -47,16 +48,16 @@ void HAL::imu_init(void)
     // Set I2C frequency to 400kHz
     Wire.begin(CONFIG_MPU_SDA, CONFIG_MPU_SCL, uint32_t(4000000));
     mpu.begin();
-    if (!g_system_calibration) {
-        struct imu_offset offset;
-        int ret = get_imu_offset(&offset);
-        if (ret == 0) {
-            log_i("mpu get offset: %f, %f, %f", offset.xoffset, offset.yoffset,
-                                     offset.zoffset);
-            mpu.setGyroOffsets(offset.xoffset, offset.yoffset, offset.zoffset);
-            is_set_offset = true;
-        }
-    }
+    // if (!g_system_calibration) {
+    //     struct imu_offset offset;
+    //     int ret = get_imu_offset(&offset);
+    //     if (ret == 0) {
+    //         log_i("mpu get offset: %f, %f, %f", offset.xoffset, offset.yoffset,
+    //                                  offset.zoffset);
+    //         mpu.setGyroOffsets(offset.xoffset, offset.yoffset, offset.zoffset);
+    //         is_set_offset = true;
+    //     }
+    // }
 
     if (!is_set_offset) {
         mpu.calcGyroOffsets(true);

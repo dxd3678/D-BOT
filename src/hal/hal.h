@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include "config.h"
 #include "CommonMacro.h"
+#include "wireless_tuning.h"
 
 typedef enum {
     SUPER_DIAL_NULL = 0,
@@ -20,7 +21,13 @@ typedef enum {
 } HassMotion;
 
 #define MOTOR_MAX_SPEED  20
-#define BOT_MAX_STEERING 500
+/** using gyro_z */
+// #define BOT_MAX_STEERING 500 
+/** no feedback */
+#define BOT_MAX_STEERING 100
+#ifdef XK_WIRELESS_PARAMETER
+extern WirelessTuning wireless;
+#endif
 
 typedef int (*wl_parm_cb)(char *);
 

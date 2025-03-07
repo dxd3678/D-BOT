@@ -47,10 +47,14 @@ export PATH=$PATH:~/.platformio/packages/toolchain-xtensa-esp32s3/bin
 xtensa-esp32s3-elf-addr2line.exe -pfiaC -e .pio/build/esp32-s3-devkitc-1/firmware.elf 0x42007e97
 ```
 
+3. MPU6050 Z 轴（YAW）零漂问题，最好每次都进行陀螺仪的静止校准`mpu.calcGyroOffsets(true);`，不然在控制指定角度转动时会不准（yaw 角会不断上涨/下降）；
+
 # 致谢开源
 
 - [Super_Balance](https://gitee.com/handmade-rice/Super_Balance): 手工饭开源平衡车；本项目的结构和小车平衡控制主要参考此项目
 
+## 相关项目
+- [sparkbot-45coll](https://gitee.com/coll45/sparkbot-45coll)
 
 
 # 一些工具
