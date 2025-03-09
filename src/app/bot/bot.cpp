@@ -15,14 +15,14 @@ int g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
 #define WHEEL_CIRCUMFERENCE (WHEEL_DIAMETER * M_PI)
 #define BOT_MOVE_END_OFFSET (10)
 #define BOT_SPIN_END_OFFSET (1)
-#define BOT_ACTION_END_TIME (500)
+#define BOT_ACTION_END_TIME (200)
 PIDController pid_bot_s {
     .P = 6, .I = 0, .D = 2, .ramp = 100000, 
     .limit = BOT_MAX_STEERING
 };
 
 PIDController pid_bot_m {
-    .P = 0.5, .I = 0, .D = 0.005, .ramp = 100000, 
+    .P = 0.03, .I = 0, .D = 0.08, .ramp = 100000, 
     .limit = MOTOR_MAX_SPEED
 }; 
 
@@ -55,6 +55,15 @@ static int execute_cmd(Command& cmd)
     return rc;
 }
 
+void dbot_loop_thread(void* argument)
+{
+    DBot &dbot = DBot::getInstance();
+    while(1) {
+        dbot.loop();
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+}
+
 void dbot_thread(void* argument)
 {
     int rc = 0;
@@ -75,7 +84,6 @@ void dbot_thread(void* argument)
         } else {
             vTaskDelay(pdMS_TO_TICKS(50));
         }
-        dbot.loop();
     }
 }
 
@@ -105,14 +113,24 @@ void DBot::init(void)
         nullptr,
         ESP32_RUNNING_CORE,
         &handleXBotThread);
+    TaskHandle_t handleDBotLoop;
+    xTaskCreate(
+        dbot_loop_thread,
+        "DBotLoop",
+        4096,
+        nullptr,
+        ESP32_RUNNING_CORE,
+        &handleDBotLoop);
 }
 
 void DBot::handleMessage(const JsonDocument& json) {
     const char* action = json["action"];
-    if (strcmp(action, "move") == 0) {
-        move(json["target"]);
-    } else if (strcmp(action, "spin") == 0) {
-        spin(json["target"]);
+    double target = json["target"];
+    log_i("atction %s, target %.2lf\n", action, target);
+    if (strcmp(action, "MOVE") == 0) {
+        move(target);
+    } else if (strcmp(action, "SPIN") == 0) {
+        spin(target);
     }
 }
 
@@ -154,8 +172,8 @@ int DBot::cmdExe(const Command &cmd, double cur)
     if (abs(cmd.target_value - cur) > end_offset) {
         end_time = millis();
     }
-    wireless.printf("target: %.2f current %.2f, output: %.2f, %.2f.\n", 
-                cmd.target_value, cur, steering, speed);
+    // wireless.printf("target: %.2f current %.2f, output: %.2f, %.2f.\n", 
+    //             cmd.target_value, cur, steering, speed);
     if (millis() > end_time + BOT_ACTION_END_TIME) {
         done = true;
         speed = 0;

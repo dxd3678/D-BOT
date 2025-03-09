@@ -33,7 +33,7 @@ void setup() {
     ffat_init();
 
     log_i("init comm...");
-    auto comm = (iot::SimpleComm *)new iot::UDPComm("8305", "88888888", 3030);
+    auto comm = (iot::SimpleComm *)new iot::UDPComm("tmp_ssid", "tmp", 6090);
     ESP_ERROR_CHECK(comm->Init());
     // uint8_t peerAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     // esp_now->SetPeerAddress(peerAddress);

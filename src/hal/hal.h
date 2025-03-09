@@ -20,7 +20,7 @@ typedef enum {
     HASS_MAX,
 } HassMotion;
 
-#define MOTOR_MAX_SPEED  20
+#define MOTOR_MAX_SPEED  15
 /** using gyro_z */
 // #define BOT_MAX_STEERING 500 
 /** no feedback */
