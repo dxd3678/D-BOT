@@ -3,6 +3,13 @@
 
 </div>
 
+D-BOT 支持的特性：
+- [x] [X-Knob](https://github.com/SmallPond/X-Knob) 原生全功能支持
+- [x] 手柄遥控控制（蓝牙）
+- [x] 无线调参数：
+  - [x] 基于 [SimpleFOCStudio](https://github.com/SmallPond/SimpleFOCStudio) （尝试合入到 upstream 中，但作者太忙一直没时间 review，暂时使用我 fork 的仓库）修改了上位机，通过无线网络连接;
+  - [x] 在 D-BOT 端通过 [WirelessTuning](https://github.com/SmallPond/WirelessTuning) 库，作为胶水层无缝适配 SimpleFOC 的 monitor 库；
+- [ ] 小智 AI 控制，化身 AI 机器人（狗头；
 
 # 无线调参
 
@@ -54,9 +61,11 @@ xtensa-esp32s3-elf-addr2line.exe -pfiaC -e .pio/build/esp32-s3-devkitc-1/firmwar
 - [Super_Balance](https://gitee.com/handmade-rice/Super_Balance): 手工饭开源平衡车；本项目的结构和小车平衡控制主要参考此项目
 
 ## 相关项目
+
 - [sparkbot-45coll](https://gitee.com/coll45/sparkbot-45coll)
-
-
+- [SimpleFOCStudio](https://github.com/JorgeMaker/SimpleFOCStudio)
+- [xiaozhi-esp32](https://github.com/78/xiaozhi-esp32)
+- 
 # 一些工具
 
 1. 批量转换图片为 bin 格式工具： [W-Mai/lvgl_image_converter](https://github.com/W-Mai/lvgl_image_converter)

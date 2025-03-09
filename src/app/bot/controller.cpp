@@ -72,9 +72,10 @@ static void controller_btn_a_handler(ButtonEvent* btn, int event)
 
 static void controller_btn_b_handler(ButtonEvent* btn, int event)
 {
+    DBot &dbot = DBot::getInstance();
     if (event == ButtonEvent::EVENT_PRESSED) {
         g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
-        x_rebot.spin(90);
+        dbot.spin(90);
     }
 }
 

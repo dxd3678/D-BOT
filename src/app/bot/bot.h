@@ -11,9 +11,10 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include <SimpleFOC.h>
-
+#include "comm/simple_comm.h"
 
 enum bot_control_type {
     BOT_CONTROL_TYPE_AI,
@@ -42,12 +43,21 @@ struct Command {
     double target_value;
 };
 
-class XBot {
+class DBot {
 public:
-    XBot(double position = 0.0, double heading = 0.0)
-        :_position(position), _heading(heading) {}
+    DBot() {};
+
+    // 删除拷贝构造函数和赋值运算符
+    DBot(const DBot&) = delete;
+    DBot& operator=(const DBot&) = delete;
+
+    // 工厂函数，返回 DBot 的单例实例
+    static DBot& getInstance();
+
     void init();
 
+    void addComm(iot::SimpleComm *comm);
+    void loop();
     void spin(double angel);
     void move(double distance);
 
@@ -60,12 +70,10 @@ public:
 
 private:
     double distanceToAngel(double distance);
-    double _heading;
-    double _position;
     std::vector<Command> commandQueue; 
     double target_yaw;
+    void handleMessage(const JsonDocument& json);
+    std::vector<iot::SimpleComm *> _comms;
 };
 
-
-extern XBot x_rebot;
 #endif 

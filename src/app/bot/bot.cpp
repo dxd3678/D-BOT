@@ -9,7 +9,6 @@
 #include "bot.h"
 #include "hal/hal.h"
 
-XBot x_rebot(0, 0);
 int g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
 
 #define WHEEL_DIAMETER 6
@@ -32,37 +31,39 @@ static int execute_cmd(Command& cmd)
     int rc = 0;
     float abs_yaw = 0;
     float cur = 0;
+    DBot &dbot = DBot::getInstance();
     switch (cmd.type) {
         case CommandType::SPIN:
             abs_yaw = HAL::imu_get_abs_yaw();
             // actual yaw need to be x2
-            x_rebot.setTargetValue(cmd, cmd.value * 2 + abs_yaw);
+            dbot.setTargetValue(cmd, cmd.value * 2 + abs_yaw);
             cmd.status = CommandStatus::EXECUTING;
             cur = abs_yaw;
             break;
         case CommandType::MOVE:
             cur = HAL::motor_get_cur_angle();
             // log_e("move set target: %lf, cur: %lf.", cmd.value + cur, cur);
-            x_rebot.setTargetValue(cmd, cmd.value + cur);
+            dbot.setTargetValue(cmd, cmd.value + cur);
             cmd.status = CommandStatus::EXECUTING;
             break;
     }
 
-    rc = x_rebot.cmdExe(cmd, cur);
+    rc = dbot.cmdExe(cmd, cur);
     if (rc == 0) {
         cmd.status = CommandStatus::COMPLETED;
     }
     return rc;
 }
 
-void xbot_thread(void* argument)
+void dbot_thread(void* argument)
 {
     int rc = 0;
     bool ready = true;
     Command cmd;
+    DBot &dbot = DBot::getInstance();
     while(1) {
-        if (x_rebot.hasCmd()) {
-            cmd = x_rebot.popCommand();
+        if (dbot.hasCmd()) {
+            cmd = dbot.popCommand();
             HAL::audio_play_music("DeviceInsert");
             pid_bot_s.reset();
             pid_bot_m.reset();
@@ -74,22 +75,54 @@ void xbot_thread(void* argument)
         } else {
             vTaskDelay(pdMS_TO_TICKS(50));
         }
+        dbot.loop();
     }
 }
 
-void XBot::init(void)
+DBot& DBot::getInstance() {
+    // std::unique_ptr<DBot> DBot::_instance
+    static auto instance = std::unique_ptr<DBot>(new DBot());
+    return *instance;
+}
+
+void DBot::addComm(iot::SimpleComm *comm) {
+    _comms.push_back(comm);
+}
+
+void DBot::init(void)
 {
+    for (auto& comm : _comms) {
+        // ESP_ERROR_CHECK(comm->Init());
+        comm->SetRecvCallback([this](const JsonDocument& json) {
+            handleMessage(json);
+        });
+    }
     TaskHandle_t handleXBotThread;
     xTaskCreate(
-        xbot_thread,
-        "BuzzerThread",
+        dbot_thread,
+        "DBotThread",
         4096,
         nullptr,
         ESP32_RUNNING_CORE,
         &handleXBotThread);
 }
 
-int XBot::setTargetValue(Command& cmd, double target)
+void DBot::handleMessage(const JsonDocument& json) {
+    const char* action = json["action"];
+    if (strcmp(action, "move") == 0) {
+        move(json["target"]);
+    } else if (strcmp(action, "spin") == 0) {
+        spin(json["target"]);
+    }
+}
+
+void DBot::loop() {
+    for (auto& comm : _comms) {
+        comm->Loop();
+    }
+}
+
+int DBot::setTargetValue(Command& cmd, double target)
 {
     if (cmd.status != CommandStatus::PENDING) {
         return -1;
@@ -99,7 +132,7 @@ int XBot::setTargetValue(Command& cmd, double target)
     return 0;
 }
 
-int XBot::cmdExe(const Command &cmd, double cur)
+int DBot::cmdExe(const Command &cmd, double cur)
 {
     float speed = 0, steering = 0;
     float end_offset = 0;
@@ -136,29 +169,29 @@ int XBot::cmdExe(const Command &cmd, double cur)
     return -1;
 }
 
-void XBot::spin(double angel)
+void DBot::spin(double angel)
 {
     commandQueue.push_back({CommandType::SPIN, angel, CommandStatus::PENDING});
 }
 
-void XBot::move(double distance)
+void DBot::move(double distance)
 {
     double motor_angle;
     motor_angle = distanceToAngel(distance);
     commandQueue.push_back({CommandType::MOVE, motor_angle, CommandStatus::PENDING});
 }
 
-double XBot::distanceToAngel(double distance)
+double DBot::distanceToAngel(double distance)
 {
     return distance/WHEEL_CIRCUMFERENCE*360.0;
 }
 
-bool XBot::hasCmd(void)
+bool DBot::hasCmd(void)
 {
     return !commandQueue.empty();
 }
 
-Command XBot::popCommand(void) 
+Command DBot::popCommand(void) 
 {
     Command cmd = commandQueue.front(); 
     commandQueue.erase(commandQueue.begin());

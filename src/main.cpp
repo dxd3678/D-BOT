@@ -6,6 +6,9 @@
 #include "web/WiFiAsyncWebServer.h"
 #include "app/bot/controller.h"
 #include "app/bot/bot.h"
+#include "app/bot/comm/espnow_comm.h"
+#include "app/bot/comm/udp_comm.h"
+#include "app/bot/comm/simple_comm.h"
 
 void push_handler(ButtonEvent* btn, int event)
 {
@@ -28,8 +31,18 @@ void setup() {
     nvs_init();
     HAL::Init();
     ffat_init();
-    
-    x_rebot.init();
+
+    log_i("init comm...");
+    auto comm = (iot::SimpleComm *)new iot::UDPComm("8305", "88888888", 3030);
+    ESP_ERROR_CHECK(comm->Init());
+    // uint8_t peerAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    // esp_now->SetPeerAddress(peerAddress);
+    // ESP_ERROR_CHECK(esp_now->Init());
+
+    DBot &dbot = DBot::getInstance();
+    dbot.addComm(comm);
+    dbot.init();
+
     controller_init();
     // strip_init();
     // HWSerial.begin(115200);
