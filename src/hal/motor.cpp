@@ -41,7 +41,7 @@ PIDController pid_stb{
     .limit = MOTOR_MAX_TORQUE 
 }; 
 // P = 0.1 I= 0.08
-#define PID_VEL_P (0.1)
+#define PID_VEL_P (0.2)
 #define PID_VEL_I (0.02)
 #define PID_VEL_D (0.00)
 PIDController pid_vel{
@@ -452,10 +452,8 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
     // float steering_adj = lpf_steering(steering);
 
     /* Parallel PID */
-    
-    // float target_yaw = 0;
     stb_adj = pid_stb(g_offset_parameters - mpu_pitch);
-    if (throttle != 0 || steering != 0) {
+    if (throttle != 0) {
         pid_vel.I = 0;
         ctlr_start_ms = millis();
     } else {
