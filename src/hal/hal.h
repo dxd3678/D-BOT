@@ -24,7 +24,7 @@ typedef enum {
 /** using gyro_z */
 // #define BOT_MAX_STEERING 500 
 /** no feedback */
-#define BOT_MAX_STEERING 100
+#define BOT_MAX_STEERING 60
 #ifdef XK_WIRELESS_PARAMETER
 extern WirelessTuning wireless;
 #endif

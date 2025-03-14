@@ -41,7 +41,7 @@ PIDController pid_stb{
     .limit = MOTOR_MAX_TORQUE 
 }; 
 // P = 0.1 I= 0.08
-#define PID_VEL_P (0.2)
+#define PID_VEL_P (0.3)
 #define PID_VEL_I (0.02)
 #define PID_VEL_D (0.00)
 PIDController pid_vel{
@@ -62,7 +62,7 @@ PIDController pid_steering{
 extern PIDController pid_bot_s;
 extern PIDController pid_bot_m;
 
-float g_offset_parameters = -3; // 偏置参数
+float g_offset_parameters = -2; // 偏置参数
 float g_throttle = 0;
 float g_steering = 0;
 //目标变量
@@ -585,8 +585,8 @@ void TaskMotorUpdate(void *pvParameters)
 
         run_balance_task(&motor_0, &motor_1, g_throttle, g_steering);
 
-        // motor_0.move(10);
-        // motor_1.move(10);
+        //motor_0.move(1);
+        //motor_1.move(1);
 
         motor_0.monitor();
         // motor_0.monitor();

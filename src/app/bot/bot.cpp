@@ -22,7 +22,7 @@ PIDController pid_bot_s {
 };
 
 PIDController pid_bot_m {
-    .P = 0.03, .I = 0, .D = 0.08, .ramp = 100000, 
+    .P = 0.03, .I = 0, .D = 0.027, .ramp = 100000, 
     .limit = MOTOR_MAX_SPEED
 }; 
 
@@ -145,7 +145,8 @@ int DBot::setTargetValue(Command& cmd, double target)
     if (cmd.status != CommandStatus::PENDING) {
         return -1;
     }
-    log_d("set target: %lf, CUR %lf .", target, HAL::motor_get_cur_angle());
+    log_d("set target: %lf, CUR MOTOR angle %lf, bot angle %lf.\n", target, 
+                HAL::motor_get_cur_angle(), HAL::imu_get_abs_yaw());
     cmd.target_value = target;
     return 0;
 }
