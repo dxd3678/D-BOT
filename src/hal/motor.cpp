@@ -62,12 +62,11 @@ PIDController pid_steering{
 extern PIDController pid_bot_s;
 extern PIDController pid_bot_m;
 
-float g_offset_parameters = -2; // 偏置参数
+float g_mid_value = -2; // 偏置参数
 float g_throttle = 0;
 float g_steering = 0;
 //目标变量
 float target_velocity = 0;
-#define MACHINE_MID_VALUE 1
 Account* actMotorStatus;
 
 #define MAX_MOTOR_NUM      2
@@ -239,10 +238,35 @@ void on_vel_pid(char* cmd){
 void on_str_pid(char* cmd){commander.pid(&pid_steering, cmd);}
 void on_bot_s_pid(char* cmd){commander.pid(&pid_bot_s, cmd);}
 void on_bot_m_pid(char* cmd){commander.pid(&pid_bot_m, cmd);}
+void on_store_parameter(char* cmd) 
+{
+    nvs_set_pid_config(PID_S_CONFIG, pid_stb);
+    nvs_set_pid_config(PID_V_CONFIG, pid_vel);
+    nvs_set_pid_config(PID_T_CONFIG, pid_steering);
+    nvs_set_pid_config(PID_R_CONFIG, pid_bot_m);
+    nvs_set_pid_config(PID_B_CONFIG, pid_bot_s);
+    nvs_set_float(NVS_D_BOT, MACHINE_MID_VALUE_KEY, g_mid_value);
+    HAL::audio_play_music("BattChargeStart");
+}
+
+int ctrl_restore_parameter()
+{
+    int rc = 0;
+    if (nvs_get_pid_config(PID_S_CONFIG, pid_stb) 
+        || nvs_get_pid_config(PID_V_CONFIG, pid_vel) 
+        || nvs_get_pid_config(PID_T_CONFIG, pid_steering)
+        || nvs_get_pid_config(PID_R_CONFIG, pid_bot_m)
+        || nvs_get_pid_config(PID_B_CONFIG, pid_bot_s)
+        || nvs_get_float(NVS_D_BOT, MACHINE_MID_VALUE_KEY, g_mid_value)) {
+        return -1;
+    }
+    pid_vel_tmp=pid_vel;
+    return 0;
+}
 void on_imu_offset(char *cmd)
 {
-    commander.scalar(&g_offset_parameters, cmd);
-    log_i("imu offset change to %.2f\n", g_offset_parameters);
+    commander.scalar(&g_mid_value, cmd);
+    log_i("imu offset change to %.2f\n", g_mid_value);
 }
 
 void on_motor(char* cmd){
@@ -398,7 +422,7 @@ static int check_balance_status(float mpu_pitch)
 {
     static unsigned long start_wait = 0;
     
-    if (abs(mpu_pitch - g_offset_parameters) > BALANCE_STOP_PITCH_OFFSET) {
+    if (abs(mpu_pitch - g_mid_value) > BALANCE_STOP_PITCH_OFFSET) {
         g_balance_status = BALANCE_OFF;
         return -1;
     }
@@ -452,7 +476,7 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
     // float steering_adj = lpf_steering(steering);
 
     /* Parallel PID */
-    stb_adj = pid_stb(g_offset_parameters - mpu_pitch);
+    stb_adj = pid_stb(g_mid_value - mpu_pitch);
     if (throttle != 0) {
         pid_vel.I = 0;
         ctlr_start_ms = millis();
@@ -465,8 +489,7 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
     speed_adj = pid_vel(speed - lpf_throttle(throttle));
     steering_adj = pid_steering(lpf_steering(steering) - 0);
     all_adj = stb_adj + speed_adj;
-    
-#if MACHINE_MID_VALUE
+
     motor_l->target = (all_adj + steering_adj);
     motor_r->target = -(all_adj - steering_adj);
     // if (steering != 0) 
@@ -476,9 +499,6 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
 out:
     motor_l->move();
     motor_r->move();
-#else
-    Serial.printf("pich: %0.2f, yaw : %0.2f %0.2f\n", mpu_pitch, mpu_yaw, all_adj);
-#endif
     return rc;
 }
 
@@ -680,10 +700,14 @@ void HAL::motor_init(void)
     if(!wireless.begin(wifi_name, wifi_pass)) {
         log_system(SYSTEM_ERR, "setup WiFi failed!");
     } else {
-        log_system(SYSTEM_INFO, "[D-BOT] ip %s", WiFi.localIP().toString().c_str());
+        log_system(SYSTEM_INFO, "ip %s", WiFi.localIP().toString().c_str());
     }
     // ret = wireless.begin("ESP_DINGMOS", "12344321", AP_MODE);
 #endif
+    log_system(SYSTEM_INFO, "getting parameter from nvs...");
+    if (ctrl_restore_parameter()) {
+        log_system(SYSTEM_ERR, "failed to get pid parameter from nvs, using default.");
+    }
 
     log_i("[motor]: calibration %s", g_system_calibration?"true":"false");
     if (g_system_calibration == false) {
@@ -708,16 +732,18 @@ void HAL::motor_init(void)
     log_i("Motor ready.");
     log_i("Set the target velocity using serial terminal:");
 
-    commander.add('M', on_motor, "my motor");
+    commander.add('M', on_motor, const_cast<char*>("my motor"));
 
 
-    commander.add('S', on_stb_pid, "PID stable");
-    commander.add('V', on_vel_pid, "PID vel");
-    commander.add('T', on_str_pid, "PID str");
-    commander.add('B', on_bot_s_pid, "PID bot spin");
-    commander.add('R', on_bot_m_pid, "PID bot move");
+    commander.add('S', on_stb_pid, const_cast<char*>("PID stable"));
+    commander.add('V', on_vel_pid, const_cast<char*>("PID vel"));
+    commander.add('T', on_str_pid, const_cast<char*>("PID str"));
+    commander.add('B', on_bot_s_pid, const_cast<char*>("PID bot spin"));
+    commander.add('R', on_bot_m_pid, const_cast<char*>("PID bot move"));
     
-    commander.add('X', on_imu_offset, "imu offset");
+    commander.add('X', on_imu_offset, const_cast<char*>("imu offset"));
+    commander.add('C', on_store_parameter, 
+                const_cast<char*>("store all wirelss tuning parameter"));
 
     // commander.add('M', onMotor, "my motor");
     actMotorStatus = new Account("MotorStatus", AccountSystem::Broker(), sizeof(MotorStatusInfo), nullptr);
@@ -760,8 +786,8 @@ void HAL::motor_set_speed(float speed, float steering)
             steering = BOT_MAX_STEERING;
         }
 
-        g_throttle = (float)-speed;
-        g_steering = (float)-steering;
+        g_throttle = (float)speed;
+        g_steering = (float)steering;
         // log_e("throttle: %.2f steering %.2f.", g_throttle, g_steering);
 #ifdef XK_WIRELESS_PARAMETER
         // wireless.printf("throttle: %.2f steering %.2f.\n", g_throttle, g_steering);

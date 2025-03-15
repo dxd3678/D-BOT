@@ -20,7 +20,7 @@ void HAL::Init()
         Serial.printf("lv_port_disp_init malloc failed!\n");
     // power_init();
     display_init();
-    system_ui_init();
+    // system_ui_init();
     buzz_init();
     // buzz_tone(700, 30);
     log_system(SYSTEM_INFO, "init audio...");
@@ -40,7 +40,7 @@ void HAL::Init()
 
     // knob_init();
     // super_dial_init();
-    system_ui_uninit();
+    // system_ui_uninit();
     // xTaskNotifyGive(handleTaskIMU);
     // xTaskNotifyGive(handleTaskMotor);
 }

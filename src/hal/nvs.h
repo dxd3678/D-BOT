@@ -5,6 +5,7 @@
 //#include <EEPROM.h>
 #include <Preferences.h>
 #include "config.h"
+#include <SimpleFOC.h>
 
 
 #define CONFIG_NAMESPACE         "config"
@@ -28,6 +29,21 @@
 #define MOTOR_CONFIG             "motor_config"
 #define MOTOR_LEFT_OFFSET        "motor_l_offset"
 #define MOTOR_RIGHT_OFFSET       "motor_r_offset"
+
+#define PID_S_CONFIG  "PID_S"
+#define PID_V_CONFIG  "PID_V"
+#define PID_T_CONFIG  "PID_T"
+#define PID_R_CONFIG  "PID_R"
+#define PID_B_CONFIG  "PID_B"
+
+#define PID_P_KEY     "pid_p"
+#define PID_I_KEY     "pid_i"
+#define PID_D_KEY     "pid_d"
+#define PID_RAMP_KEY  "pid_ramp"
+#define PID_LIMIT_KEY "pid_limit"
+
+#define NVS_D_BOT   "d_bot"
+#define MACHINE_MID_VALUE_KEY "mid_value"
 
 typedef struct {
     bool init_ffat_flag;
@@ -68,4 +84,9 @@ void set_imu_config(float gyroXoffset, float gyroYoffset, float gyroZoffset);
 int get_imu_offset(struct imu_offset *offset);
 void nvs_set_motor_config(float motor_l_offset, float motor_r_offset);
 int nvs_get_motor_offset(struct motor_offset *offset);
+
+int nvs_set_pid_config(const char *name, PIDController pid);
+int nvs_get_pid_config(const char *name, PIDController &pid);
+int nvs_set_float(const char *name, const char *key, float vaule);
+int nvs_get_float(const char *name, const char *key, float &vaule);
 #endif
