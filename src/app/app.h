@@ -34,9 +34,6 @@ do{                 \
      (type *)( (char *)__mptr - offsetof(type,member) );})
 #endif
 
-
-void display_init();
-
 void App_Init();
 void App_UnInit();
 

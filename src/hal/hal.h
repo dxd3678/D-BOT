@@ -20,6 +20,11 @@ typedef enum {
     HASS_MAX,
 } HassMotion;
 
+#define SYSTEM_ERR     0
+#define SYSTEM_WARN    1
+#define SYSTEM_INFO    2
+#define SYSTEM_DEBUG   3
+
 #define MOTOR_MAX_SPEED  15
 /** using gyro_z */
 // #define BOT_MAX_STEERING 500 
@@ -32,6 +37,10 @@ extern WirelessTuning wireless;
 typedef int (*wl_parm_cb)(char *);
 
 extern bool g_system_calibration;
+
+extern TaskHandle_t handleTaskMotor;
+extern TaskHandle_t handleTaskIMU;
+
 namespace HAL
 {
 
@@ -43,7 +52,7 @@ namespace HAL
     bool encoder_is_pushed(void);
 
     void motor_init(void);
-    // void TaskMotorUpdate(void *pvParameters);
+    // void motor_task(void *pvParameters);
     int get_motor_position(int id);
     void update_motor_mode(int id, int mode , int init_position);
     void motor_shake(int id, int strength, int delay_time);
@@ -90,6 +99,10 @@ namespace HAL
     float imu_get_gyro_z(void);
 
     int wireless_param_init(wl_parm_cb cb);
+
+    int system_ui_init(void);
+    void log_system(int level, const char *format, ...);
+    int system_ui_uninit();
 }
 
 

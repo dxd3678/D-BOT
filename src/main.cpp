@@ -30,8 +30,7 @@ void push_handler(ButtonEvent* btn, int event)
 void setup() {
     nvs_init();
     HAL::Init();
-    ffat_init();
-
+    // ffat_init();
     log_i("init comm...");
     auto comm = (iot::SimpleComm *)new iot::UDPComm("tmp_ssid", "tmp", 6090);
     ESP_ERROR_CHECK(comm->Init());
@@ -46,7 +45,6 @@ void setup() {
     controller_init();
     // strip_init();
     // HWSerial.begin(115200);
-    display_init();
     App_Init();
     // INIT_DONE();
 }

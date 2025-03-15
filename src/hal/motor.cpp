@@ -564,7 +564,7 @@ static int run_knob_task(BLDCMotor *motor, int id)
 }
 
 TaskHandle_t handleTaskMotor;
-void TaskMotorUpdate(void *pvParameters)
+void motor_task(void *pvParameters)
 {
     // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 #if XK_INVERT_ROTATION
@@ -677,7 +677,11 @@ void HAL::motor_init(void)
     get_wifi_config(ssid, password);
     const char *wifi_name = ssid.c_str();  
     const char *wifi_pass = password.c_str(); 
-    wireless.begin(wifi_name, wifi_pass);
+    if(!wireless.begin(wifi_name, wifi_pass)) {
+        log_system(SYSTEM_ERR, "setup WiFi failed!");
+    } else {
+        log_system(SYSTEM_INFO, "[D-BOT] ip %s", WiFi.localIP().toString().c_str());
+    }
     // ret = wireless.begin("ESP_DINGMOS", "12344321", AP_MODE);
 #endif
 
@@ -718,7 +722,7 @@ void HAL::motor_init(void)
     // commander.add('M', onMotor, "my motor");
     actMotorStatus = new Account("MotorStatus", AccountSystem::Broker(), sizeof(MotorStatusInfo), nullptr);
     ret = xTaskCreatePinnedToCore(
-        TaskMotorUpdate,
+        motor_task,
         "MotorThread",
         4096,
         nullptr,

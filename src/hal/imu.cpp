@@ -13,9 +13,10 @@ static MPU6050 mpu(Wire);
  * pitch -- z
 */
 
-static TaskHandle_t handleTaskIMU;
+TaskHandle_t handleTaskIMU;
 void HAL::imu_update(void *pvParameters)
 {
+    // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     float yaw = 0;
     static float last_yaw = 0;
     while(1) {
