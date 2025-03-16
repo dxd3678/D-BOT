@@ -86,7 +86,7 @@ void HAL::imu_init(void)
 
 float HAL::imu_get_pitch(void)
 {
-    return mpu.getAngleY();
+    return mpu.getAngleY(); /* 0-180  -180 - 0 */
 }
 
 float HAL::imu_get_yaw(void)

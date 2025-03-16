@@ -14,6 +14,12 @@ BLDCDriver3PWM driver = BLDCDriver3PWM(MO0_1, MO0_2, MO0_3);
 BLDCMotor motor_1 = BLDCMotor(7);
 BLDCDriver3PWM driver_1 = BLDCDriver3PWM(MO1_1, MO1_2, MO1_3);
 
+enum MOTOR_TASK_MODE {
+    MOTOR_TASK_NONE,
+    MOTOR_TASK_XKNOB,
+    MOTOR_TASK_BALANCE,
+};
+
 enum BALANCE_STATUS {
     BALANCE_OFF,
     BALANCE_WATTING,
@@ -614,33 +620,87 @@ static int run_knob_task(BLDCMotor *motor, int id)
     return 0;
 }
 
+static int motor_task_mode_update(int &mode, bool &is_changed)
+{
+    int mpu_pitch = (int)(HAL::imu_get_pitch());
+    static int last_mode = MOTOR_TASK_NONE;
+    static unsigned long last_change_time = 0;
+    static bool is_timing = false;
+    int mode_tmp = MOTOR_TASK_NONE;
+   
+    if (abs(mpu_pitch) > 120) {
+        mode_tmp = MOTOR_TASK_XKNOB;
+    }
+
+    if (abs(mpu_pitch) < 60) {
+        mode_tmp = MOTOR_TASK_BALANCE;
+    }
+
+    if (mode_tmp != mode && !is_timing) {
+        last_change_time = millis(); // 记录状态变化的时间
+        is_timing = true;
+    }
+    if (mode_tmp == mode) {
+        is_timing = false;
+    }
+
+    if (is_timing && millis() - last_change_time >= 1000) {
+        mode = mode_tmp; // 更新模式
+        is_changed = true; // 标记状态变化
+        log_e("pitch: %d mode from %d change to %d", mpu_pitch, last_mode, mode);
+        last_mode = mode; // 更新上一次模式
+    }
+    
+    return 0;
+}
+
+static void motor_reset_center()
+{
+    #if XK_INVERT_ROTATION
+    motor_s[ENCODER_MOTOR_NUM].current_detent_center = -motor_0.shaft_angle;
+    motor_s[KNOB_MOTOR_NUM].current_detent_center = -motor_1.shaft_angle;
+#else 
+    motor_s[ENCODER_MOTOR_NUM].current_detent_center = motor_0.shaft_angle;
+    motor_s[KNOB_MOTOR_NUM].current_detent_center = motor_1.shaft_angle;
+#endif
+    motor_s[0].last_idle_start = 0;
+    motor_s[1].last_idle_start = 0;
+}
 TaskHandle_t handleTaskMotor;
 void motor_task(void *pvParameters)
 {
     // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-#if XK_INVERT_ROTATION
-    motor_s[0].current_detent_center = -motor_0.shaft_angle;
-    motor_s[1].current_detent_center = -motor_1.shaft_angle;
-#else 
-    motor_s[0].current_detent_center = motor_0.shaft_angle;
-    motor_s[0].current_detent_center = motor_1.shaft_angle;
-#endif
+    int motor_task = MOTOR_TASK_NONE;
+    bool is_task_changed = false;
+    motor_reset_center();
     while(1) {
+        is_task_changed = false;
         sensor_0.update();
         motor_0.loopFOC();
         // Serial.printf("angle: %f\n", motor_1.shaft_angle);
         sensor_1.update();
         motor_1.loopFOC();
 
-        float mpu_pitch = HAL::imu_get_pitch();
-        if (abs(abs(mpu_pitch) - 180) < 90) {
+        motor_task_mode_update(motor_task, is_task_changed);
+
+        switch(motor_task) {
+        case MOTOR_TASK_NONE:
+            motor_0.move(0);
+            motor_1.move(0);
+            break;
+        case MOTOR_TASK_BALANCE:
+            run_balance_task(&motor_0, &motor_1, g_throttle, g_steering);
+            break;
+        case MOTOR_TASK_XKNOB:
+            if (is_task_changed) {
+                motor_reset_center();
+            }
             run_knob_task(&motor_0, ENCODER_MOTOR_NUM);
             run_knob_task(&motor_1, KNOB_MOTOR_NUM);
-        }else {
-            run_balance_task(&motor_0, &motor_1, g_throttle, g_steering);
+            break;
+        default:
+            break;
         }
-        //motor_0.move(1);
-        //motor_1.move(1);
 
         motor_0.monitor();
         // motor_0.monitor();
