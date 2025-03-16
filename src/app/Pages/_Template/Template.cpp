@@ -49,10 +49,10 @@ void Template::onViewWillAppear()
 	// timer = lv_timer_create(onTimerUpdate, param.time, this);
 	timer = lv_timer_create(onTimerUpdate, LV_DISP_DEF_REFR_PERIOD, this);
 
-	emoji_buffer = (unsigned char *)malloc(EMOJI_SIZE);
-    if (emoji_buffer == nullptr) {
-		LV_LOG_ERROR("emoji_buffer malloc failed!\n");
-	}
+	// emoji_buffer = (unsigned char *)malloc(EMOJI_SIZE);
+    // if (emoji_buffer == nullptr) {
+	// 	LV_LOG_ERROR("emoji_buffer malloc failed!\n");
+	// }
         
 	// lv_timer_ready(timer);
 }
@@ -107,8 +107,7 @@ void Template::onEvent(lv_event_t* event)
 	lv_event_code_t code = lv_event_get_code(event);
 	auto* instance = (Template*)lv_obj_get_user_data(obj);
 
-	if (code == LV_EVENT_PRESSED)
-	{
+	if (code == LV_EVENT_PRESSED) {
 		instance->Manager->Push("Pages/Menu");
 	}
 }

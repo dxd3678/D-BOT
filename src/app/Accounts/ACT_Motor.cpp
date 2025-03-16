@@ -17,7 +17,7 @@ static int onEvent(Account* account, Account::EventParam_t* param)
     }
 
     AccountSystem::Motor_Info_t* info = (AccountSystem::Motor_Info_t*)param->data_p;
-    Serial.printf("Motor: OnEvent");
+    log_e("Motor: OnEvent");
     switch (info->cmd)
     {
     case MOTOR_CMD_CHANGE_MODE:

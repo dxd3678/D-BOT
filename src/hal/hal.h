@@ -25,6 +25,26 @@ typedef enum {
 #define SYSTEM_INFO    2
 #define SYSTEM_DEBUG   3
 
+#define KNOB_MOTOR_NUM    0
+#define ENCODER_MOTOR_NUM 1
+
+typedef enum
+{
+    MOTOR_UNBOUND_FINE_DETENTS,        // Fine values\nWith detents
+    MOTOR_UNBOUND_NO_DETENTS,
+    MOTOR_SUPER_DIAL, 
+    MOTOR_UNBOUND_COARSE_DETENTS, // Coarse values\nStrong detents\n unbound
+    MOTOR_BOUND_0_12_NO_DETENTS,
+    MOTOR_BOUND_LCD_BK_BRIGHTNESS,
+    MOTOR_BOUND_LCD_BK_TIMEOUT,
+    MOTOR_COARSE_DETENTS,       // Coarse values\nStrong detents
+    MOTOR_FINE_NO_DETENTS,     // Fine values\nNo detents
+    MOTOR_ON_OFF_STRONG_DETENTS,             // "On/off\nStrong detent"
+    MOTOR_RETURN_TO_CENTER,
+    MOTOR_MAX_MODES, //
+
+} MOTOR_RUNNING_MODE_E;
+
 #define MOTOR_MAX_SPEED  15
 /** using gyro_z */
 // #define BOT_MAX_STEERING 500 
@@ -58,6 +78,7 @@ namespace HAL
     void motor_shake(int id, int strength, int delay_time);
     void motor_set_speed(float speed, float steering);
     double motor_get_cur_angle(void);
+    double get_motor_angle_offset(int id);
 
     void surface_dial_init(void);
     void surface_dial_update(SuperDialMotion direction);

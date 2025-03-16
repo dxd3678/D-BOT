@@ -56,6 +56,7 @@ void PlaygroundModel::ChangeMotorMode(int mode)
     AccountSystem::Motor_Info_t info;
     info.cmd = AccountSystem::MOTOR_CMD_CHANGE_MODE;
     info.motor_mode = mode;
+    info.motor_num = KNOB_MOTOR_NUM;
     info.init_position = 0;
     // 第一个参数是通知发布者，即本 Account 应该 subscribe 第一个参数指向的 Account 
     account->Notify("Motor", &info, sizeof(info));  
@@ -68,6 +69,7 @@ void PlaygroundModel::ChangeMotorModeWithInitPosition(int mode, int init_positio
     AccountSystem::Motor_Info_t info;
     info.cmd = AccountSystem::MOTOR_CMD_CHANGE_MODE;
     info.motor_mode = mode;
+    info.motor_num = KNOB_MOTOR_NUM;
     info.init_position = init_position;
     // 第一个参数是通知发布者，即本 Account 应该 subscribe 第一个参数指向的 Account 
     account->Notify("Motor", &info, sizeof(info));  

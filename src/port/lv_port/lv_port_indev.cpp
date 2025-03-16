@@ -71,16 +71,16 @@ static void encoder_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
     // data->state =  HAL::Encoder_GetIsPush() ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;
     static int now_num = 0;
     static int old_num = 0;
-    now_num = HAL::get_motor_position(0);
+    now_num = HAL::get_motor_position(KNOB_MOTOR_NUM);
 
     data->enc_diff = 0;
     if (HAL::is_encoder_enabled()) {
         if (now_num > old_num) {
-            data->enc_diff++;
-            old_num = HAL::get_motor_position(0);
-        } else if (now_num < old_num) {
             data->enc_diff--;
-            old_num = HAL::get_motor_position(0);
+            old_num = HAL::get_motor_position(KNOB_MOTOR_NUM);
+        } else if (now_num < old_num) {
+            data->enc_diff++;
+            old_num = HAL::get_motor_position(KNOB_MOTOR_NUM);
         }
 
     }

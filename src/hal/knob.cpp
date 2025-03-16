@@ -17,10 +17,13 @@ bool HAL::encoder_is_pushed(void)
         return false;
     }
 
-    if (digitalRead(PUSH_BUTTON_PIN) == LOW) {
-        // Serial.printf("Push button Pressed\n");
+    if (abs(get_motor_angle_offset(ENCODER_MOTOR_NUM)) > 30) {
         return true;
-    } 
+    }
+    // if (digitalRead(PUSH_BUTTON_PIN) == LOW) {
+    //     // Serial.printf("Push button Pressed\n");
+    //     return true;
+    // } 
     return false;
 }
 
@@ -54,9 +57,12 @@ static void Encoder_PushHandler(ButtonEvent* btn, int event)
 
 void HAL::knob_init(void)
 {
-    pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
-    EncoderPush.EventAttach(Encoder_PushHandler);
+    // pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
+    // EncoderPush.EventAttach(Encoder_PushHandler);
+    update_motor_mode(ENCODER_MOTOR_NUM, MOTOR_RETURN_TO_CENTER, 0);
+    update_motor_mode(KNOB_MOTOR_NUM, MOTOR_UNBOUND_COARSE_DETENTS, 0);
     knob_inited = true;
+
     // attachInterrupt(CONFIG_ENCODER_A_PIN, Encoder_A_IrqHandler, CHANGE);
     // push_button.EventAttach(button_handler);
 

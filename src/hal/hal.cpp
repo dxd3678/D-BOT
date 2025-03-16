@@ -38,7 +38,7 @@ void HAL::Init()
     // String test_content = tf.readFileLine("/dingmos_test.txt", 1);        // line-1 for WiFi ssid
     // log_i("read test file: %s", test_content.c_str());
 
-    // knob_init();
+    knob_init();
     // super_dial_init();
     // system_ui_uninit();
     // xTaskNotifyGive(handleTaskIMU);

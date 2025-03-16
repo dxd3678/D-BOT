@@ -83,7 +83,7 @@ static XKnobConfig x_knob_configs[] = {
         0,
         0,
         1 * PI / 180,
-        2,
+        2, /* detent_strength_unit */
         1,
         1.1,
         "Fine values\nWith detents", //任意运动的控制  有阻尼 类似于机械旋钮
@@ -170,6 +170,15 @@ static XKnobConfig x_knob_configs[] = {
         0.55,                    // Note the snap point is slightly past the midpoint (0.5); compare to normal detents which use a snap point *past* the next value (i.e. > 1)
         "On/off\nStrong detent", //模拟开关  强制动
     },
+    [MOTOR_RETURN_TO_CENTER] = {
+        .num_positions = 1,
+        .position = 0,
+        .position_width_radians = 60 * PI / 180,
+        .detent_strength_unit = 1,
+        .endstop_strength_unit = 1,
+        .snap_point = 1.1,
+        "Return to center"
+    }
 
 };
 
@@ -377,6 +386,23 @@ int HAL::get_motor_position(int id)
     return motor_config[id].position;
 }
 
+struct motor_stat* motor_status_get_by_id(int id)
+{
+    return &motor_s[id];
+    
+}
+
+double HAL::get_motor_angle_offset(int id)
+{
+    struct motor_stat *ms = motor_status_get_by_id(id);
+    if (!ms) {
+        log_e("get ms by id %d failed.", id);
+        return 0;
+    }
+    // log_e("angel_offset %lf", ms->angle_to_detent_center * 180 / PI);
+    return ms->angle_to_detent_center * 180 / PI;
+}
+
 void HAL::update_motor_mode(int id, int mode , int init_position)
 {
     BLDCMotor *motor = get_motor_by_id(id);
@@ -396,6 +422,10 @@ void HAL::update_motor_mode(int id, int mode , int init_position)
 static void motor_status_publish(struct motor_stat *ms, int id, bool is_outbound)
 {
     // position
+    if (id != KNOB_MOTOR_NUM) {
+        return;
+    }
+
     static int32_t last_position = 0;
 
     if (is_outbound || motor_config[id].position != last_position) {
@@ -461,7 +491,7 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
 
     float mpu_pitch = HAL::imu_get_pitch();
     float mpu_yaw = HAL::imu_get_yaw();
-    float gyro_z = HAL::imu_get_gyro_z();
+    // float gyro_z = HAL::imu_get_gyro_z();
 
     if (rc = check_balance_status(mpu_pitch)) {
         motor_l->target = 0;
@@ -562,8 +592,8 @@ static int run_knob_task(BLDCMotor *motor, int id)
     bool out_of_bounds = motor_config[id].num_positions > 0 && 
                 ((ms->angle_to_detent_center > 0 && motor_config[id].position == 0) 
                 || (ms->angle_to_detent_center < 0 && motor_config[id].position == motor_config[id].num_positions - 1));
-    motor->PID_velocity.limit = out_of_bounds ? 10 : 3;
-    motor->PID_velocity.P = out_of_bounds ? motor_config[id].endstop_strength_unit * 4 : motor_config[id].detent_strength_unit * 4;
+    motor->PID_velocity.limit = out_of_bounds ? MOTOR_MAX_TORQUE : MOTOR_MAX_TORQUE/2;
+    motor->PID_velocity.P = out_of_bounds ? motor_config[id].endstop_strength_unit * 3 : motor_config[id].detent_strength_unit * 3;
 
     // 处理float类型的取绝对值
     if (fabsf(motor->shaft_velocity) > 60) {
@@ -579,6 +609,7 @@ static int run_knob_task(BLDCMotor *motor, int id)
         #endif
         motor->move(torque);
     }
+
     motor_status_publish(ms, id, out_of_bounds);
     return 0;
 }
@@ -597,14 +628,17 @@ void motor_task(void *pvParameters)
     while(1) {
         sensor_0.update();
         motor_0.loopFOC();
-        // run_knob_task(&motor_0, 0);
         // Serial.printf("angle: %f\n", motor_1.shaft_angle);
         sensor_1.update();
         motor_1.loopFOC();
-        // run_knob_task(&motor_1, 1);
 
-        run_balance_task(&motor_0, &motor_1, g_throttle, g_steering);
-
+        float mpu_pitch = HAL::imu_get_pitch();
+        if (abs(abs(mpu_pitch) - 180) < 90) {
+            run_knob_task(&motor_0, ENCODER_MOTOR_NUM);
+            run_knob_task(&motor_1, KNOB_MOTOR_NUM);
+        }else {
+            run_balance_task(&motor_0, &motor_1, g_throttle, g_steering);
+        }
         //motor_0.move(1);
         //motor_1.move(1);
 
@@ -636,9 +670,9 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
     motor->controller = MotionControlType::torque;
 
     // 速度PI环设置
-    motor->PID_velocity.P = 0.6;
+    motor->PID_velocity.P = 1;
     motor->PID_velocity.I = 0;
-    motor->PID_velocity.D = 0.006;
+    motor->PID_velocity.D = 0.1;
 
     motor->PID_velocity.output_ramp = 10000;
     motor->PID_velocity.limit = MOTOR_MAX_SPEED;
