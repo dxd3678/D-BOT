@@ -94,6 +94,10 @@ typedef struct
     int motor_num;
 } Motor_Info_t;
 
+typedef struct {
+    int running_mode;
+}BotStatusInfo;
+
 /* SysConfig */
 typedef enum
 {

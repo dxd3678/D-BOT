@@ -28,6 +28,12 @@ typedef enum {
 #define KNOB_MOTOR_NUM    0
 #define ENCODER_MOTOR_NUM 1
 
+enum BOT_RUNNING_MODE {
+    BOT_RUNNING_MODE,
+    BOT_RUNNING_XKNOB,
+    BOT_RUNNING_BALANCE,
+};
+
 typedef enum
 {
     MOTOR_UNBOUND_FINE_DETENTS,        // Fine values\nWith detents

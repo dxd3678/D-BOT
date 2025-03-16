@@ -2,6 +2,7 @@
 #include "hal/hal.h"
 #include "config.h"
 #include "hal/nvs.h"
+#include "app/Accounts/Account_Master.h"
 
 using namespace Page;
 
@@ -74,9 +75,28 @@ void Hass::AttachEvent(lv_obj_t* obj)
 	lv_obj_add_event_cb(obj, onEvent, LV_EVENT_ALL, this);
 }
 
+
+int onActEvent(Account* account, Account::EventParam_t* param)
+{
+    if (param->size != sizeof(AccountSystem::BotStatusInfo))
+    {
+        return Account::ERROR_SIZE_MISMATCH;
+    }
+    
+    AccountSystem::BotStatusInfo *info = (AccountSystem::BotStatusInfo*) (param->data_p);
+    
+    if (info->running_mode == BOT_RUNNING_BALANCE) {
+		
+	}
+
+    return 0;
+}
+
 void Hass::onViewDidLoad()
 {
-
+	account = new Account("HASS", AccountSystem::Broker(), 0, NULL);
+    account->SetEventCallback(onActEvent);
+    account->Subscribe("MotorStatus");
 }
 
 void Hass::onViewWillAppear()
@@ -102,6 +122,9 @@ void Hass::onViewWillDisappear()
 void Hass::onViewDidDisappear()
 {
 	lv_timer_del(timer);
+	if (account) {
+		delete account;
+	}
 }
 
 void Hass::onViewDidUnload()

@@ -36,6 +36,7 @@ namespace Page
 		HassView* View;
 		HassModel* Model;
 		lv_timer_t* timer;
+		Account* account;
 	};
 }
 

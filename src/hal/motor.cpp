@@ -14,12 +14,6 @@ BLDCDriver3PWM driver = BLDCDriver3PWM(MO0_1, MO0_2, MO0_3);
 BLDCMotor motor_1 = BLDCMotor(7);
 BLDCDriver3PWM driver_1 = BLDCDriver3PWM(MO1_1, MO1_2, MO1_3);
 
-enum MOTOR_TASK_MODE {
-    MOTOR_TASK_NONE,
-    MOTOR_TASK_XKNOB,
-    MOTOR_TASK_BALANCE,
-};
-
 enum BALANCE_STATUS {
     BALANCE_OFF,
     BALANCE_WATTING,
@@ -74,6 +68,7 @@ float g_steering = 0;
 //目标变量
 float target_velocity = 0;
 Account* actMotorStatus;
+Account* actBotStatus;
 
 #define MAX_MOTOR_NUM      2
 
@@ -620,20 +615,29 @@ static int run_knob_task(BLDCMotor *motor, int id)
     return 0;
 }
 
+static void act_bot_status_publish(int running_mode)
+{
+    AccountSystem::BotStatusInfo info = {
+        .running_mode = running_mode,
+    };
+    actBotStatus->Commit((const void*)&info, sizeof(AccountSystem::BotStatusInfo));
+    actBotStatus->Publish();
+}
+
 static int motor_task_mode_update(int &mode, bool &is_changed)
 {
     int mpu_pitch = (int)(HAL::imu_get_pitch());
-    static int last_mode = MOTOR_TASK_NONE;
+    static int last_mode = BOT_RUNNING_MODE;
     static unsigned long last_change_time = 0;
     static bool is_timing = false;
-    int mode_tmp = MOTOR_TASK_NONE;
+    int mode_tmp = BOT_RUNNING_MODE;
    
     if (abs(mpu_pitch) > 120) {
-        mode_tmp = MOTOR_TASK_XKNOB;
+        mode_tmp = BOT_RUNNING_XKNOB;
     }
 
     if (abs(mpu_pitch) < 60) {
-        mode_tmp = MOTOR_TASK_BALANCE;
+        mode_tmp = BOT_RUNNING_BALANCE;
     }
 
     if (mode_tmp != mode && !is_timing) {
@@ -670,7 +674,7 @@ TaskHandle_t handleTaskMotor;
 void motor_task(void *pvParameters)
 {
     // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    int motor_task = MOTOR_TASK_NONE;
+    int motor_task = BOT_RUNNING_MODE;
     bool is_task_changed = false;
     motor_reset_center();
     while(1) {
@@ -682,17 +686,21 @@ void motor_task(void *pvParameters)
         motor_1.loopFOC();
 
         motor_task_mode_update(motor_task, is_task_changed);
-
+        
         switch(motor_task) {
-        case MOTOR_TASK_NONE:
+        case BOT_RUNNING_MODE:
             motor_0.move(0);
             motor_1.move(0);
             break;
-        case MOTOR_TASK_BALANCE:
+        case BOT_RUNNING_BALANCE:
+            if (is_task_changed) {
+                act_bot_status_publish(motor_task);
+            }
             run_balance_task(&motor_0, &motor_1, g_throttle, g_steering);
             break;
-        case MOTOR_TASK_XKNOB:
+        case BOT_RUNNING_XKNOB:
             if (is_task_changed) {
+                act_bot_status_publish(motor_task);
                 motor_reset_center();
             }
             run_knob_task(&motor_0, ENCODER_MOTOR_NUM);
@@ -841,6 +849,7 @@ void HAL::motor_init(void)
 
     // commander.add('M', onMotor, "my motor");
     actMotorStatus = new Account("MotorStatus", AccountSystem::Broker(), sizeof(MotorStatusInfo), nullptr);
+    actBotStatus = new Account("BotStatus", AccountSystem::Broker(), sizeof(AccountSystem::BotStatusInfo), nullptr);
     ret = xTaskCreatePinnedToCore(
         motor_task,
         "MotorThread",
