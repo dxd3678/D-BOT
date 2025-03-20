@@ -890,7 +890,7 @@ void HAL::motor_set_speed(float speed, float steering)
         }
 
         g_throttle = (float)speed;
-        g_steering = (float)steering;
+        g_steering = (float)-steering;
         // log_e("throttle: %.2f steering %.2f.", g_throttle, g_steering);
 #ifdef XK_WIRELESS_PARAMETER
         // wireless.printf("throttle: %.2f steering %.2f.\n", g_throttle, g_steering);

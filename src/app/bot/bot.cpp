@@ -13,8 +13,8 @@ int g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
 
 #define WHEEL_DIAMETER 6
 #define WHEEL_CIRCUMFERENCE (WHEEL_DIAMETER * M_PI)
-#define BOT_MOVE_END_OFFSET (10)
-#define BOT_SPIN_END_OFFSET (1)
+#define BOT_MOVE_END_OFFSET (15)
+#define BOT_SPIN_END_OFFSET (3)
 #define BOT_ACTION_END_TIME (200)
 PIDController pid_bot_s {
     .P = 6, .I = 0, .D = 2, .ramp = 100000, 
@@ -36,14 +36,14 @@ static int execute_cmd(Command& cmd)
         case CommandType::SPIN:
             abs_yaw = HAL::imu_get_abs_yaw();
             // actual yaw need to be x2
-            dbot.setTargetValue(cmd, cmd.value * 2 + abs_yaw);
+            dbot.setTargetValue(cmd, abs_yaw - cmd.value *2);
             cmd.status = CommandStatus::EXECUTING;
             cur = abs_yaw;
             break;
         case CommandType::MOVE:
             cur = HAL::motor_get_cur_angle();
             // log_e("move set target: %lf, cur: %lf.", cmd.value + cur, cur);
-            dbot.setTargetValue(cmd, cmd.value + cur);
+            dbot.setTargetValue(cmd, cur - cmd.value);
             cmd.status = CommandStatus::EXECUTING;
             break;
     }
@@ -164,7 +164,7 @@ int DBot::cmdExe(const Command &cmd, double cur)
             end_offset = BOT_SPIN_END_OFFSET;
             break;
         case CommandType::MOVE:
-            speed = pid_bot_m(cur - cmd.target_value);;
+            speed = pid_bot_m(cmd.target_value - cur);;
             end_offset = BOT_MOVE_END_OFFSET;
             break;
     }
