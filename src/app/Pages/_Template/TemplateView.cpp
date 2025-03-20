@@ -12,12 +12,12 @@ void TemplateView::Create(lv_obj_t* root)
 	lv_obj_set_size(root, LV_HOR_RES, LV_VER_RES);
 	lv_obj_set_style_bg_color(root, lv_color_black(), 0);
 
-	lv_obj_t* label = lv_label_create(root);
-	lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
-	lv_obj_set_style_text_color(label, lv_color_white(), 0);
-	lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 30);
-	lv_label_set_text(label, "");
-	ui.labelTitle = label;
+	// lv_obj_t* label = lv_label_create(root);
+	// lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
+	// lv_obj_set_style_text_color(label, lv_color_white(), 0);
+	// lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 30);
+	// lv_label_set_text(label, "");
+	// ui.labelTitle = label;
 
 	lv_obj_t* img = lv_img_create(root);
 	lv_img_set_src(img, Resource.GetImage("emoji"));
@@ -25,12 +25,12 @@ void TemplateView::Create(lv_obj_t* root)
 	lv_obj_center(img);
 	ui.canvas = img;
 
-	label = lv_label_create(root);
-	lv_obj_set_style_text_font(label, &lv_font_montserrat_10, 0);
-	lv_obj_set_style_text_color(label, lv_color_make(0,0,0), 0);
-	lv_label_set_text(label, "label tick");
-	lv_obj_align(label, LV_ALIGN_TOP_MID, 50, 50);
-	ui.labelTick = label;
+	// label = lv_label_create(root);
+	// lv_obj_set_style_text_font(label, &lv_font_montserrat_10, 0);
+	// lv_obj_set_style_text_color(label, lv_color_make(0,0,0), 0);
+	// lv_label_set_text(label, "label tick");
+	// lv_obj_align(label, LV_ALIGN_TOP_MID, 50, 50);
+	// ui.labelTick = label;
 
 	ui.group = lv_group_create();
 	lv_indev_set_group(lv_get_indev(LV_INDEV_TYPE_ENCODER), ui.group);
@@ -38,6 +38,7 @@ void TemplateView::Create(lv_obj_t* root)
 	lv_group_add_obj(ui.group, ui.canvas);
 	// lv_group_add_obj(ui.group, ui.labelTitle);
 	// lv_group_focus_obj(ui.canvas);
+	lv_group_focus_obj(ui.canvas);
 
 }
 
@@ -105,4 +106,10 @@ void TemplateView::update_emoji(unsigned char *buf)
 	img_emoji.data = buf;
 	lv_img_set_src(ui.canvas, &img_emoji);
 	pcnt++;
+}
+
+
+void TemplateView::Delete()
+{
+	lv_group_del(ui.group);
 }

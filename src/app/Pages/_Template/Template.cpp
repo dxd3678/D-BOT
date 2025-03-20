@@ -16,7 +16,7 @@ Template::~Template()
 
 void Template::onCustomAttrConfig()
 {
-	SetCustomCacheEnable(true);
+	SetCustomCacheEnable(false);
 	SetCustomLoadAnimType(PageManager::LOAD_ANIM_FADE_ON, 500, lv_anim_path_bounce);
 }
 
@@ -45,7 +45,6 @@ void Template::onViewWillAppear()
 	PAGE_STASH_POP(param);
 
 	lv_obj_set_style_bg_color(root, param.color, LV_PART_MAIN);
-	lv_obj_add_flag(View.ui.labelTick, LV_OBJ_FLAG_HIDDEN);
 	// timer = lv_timer_create(onTimerUpdate, param.time, this);
 	timer = lv_timer_create(onTimerUpdate, LV_DISP_DEF_REFR_PERIOD, this);
 
@@ -77,13 +76,13 @@ void Template::onViewDidDisappear()
 
 void Template::onViewDidUnload()
 {
-
+	// View.Delete();
 }
 
 void Template::AttachEvent(lv_obj_t* obj)
 {
 	lv_obj_set_user_data(obj, this);
-	lv_obj_add_event_cb(obj, onEvent, LV_EVENT_ALL, this);
+	lv_obj_add_event_cb(obj, onEvent, LV_EVENT_PRESSED, this);
 }
 
 void Template::Update()
@@ -106,8 +105,9 @@ void Template::onEvent(lv_event_t* event)
 	lv_obj_t* obj = lv_event_get_target(event);
 	lv_event_code_t code = lv_event_get_code(event);
 	auto* instance = (Template*)lv_obj_get_user_data(obj);
-
 	if (code == LV_EVENT_PRESSED) {
-		instance->Manager->Push("Pages/Menu");
+		if (lv_obj_has_state(obj, LV_STATE_FOCUSED)) {
+			instance->Manager->Pop();
+		}
 	}
 }

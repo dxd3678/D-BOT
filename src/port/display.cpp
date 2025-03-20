@@ -6,7 +6,7 @@
 TaskHandle_t handleTaskLvgl;
 void TaskLvglUpdate(void* parameter)
 {
-    // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     for (;;)
     {
         lv_task_handler();

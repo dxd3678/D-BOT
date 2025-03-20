@@ -16,12 +16,12 @@ class TemplateView
 public:
     void Create(lv_obj_t* root);
     void update_emoji(unsigned char *buf);
-
+    void Delete();
 public:
     struct
     {
-        lv_obj_t* labelTitle;
-        lv_obj_t* labelTick;
+        // lv_obj_t* labelTitle;
+        // lv_obj_t* labelTick;
         lv_obj_t* canvas;
         lv_group_t* group;
     } ui;
