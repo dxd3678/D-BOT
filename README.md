@@ -32,8 +32,19 @@ D-BOT 支持的特性：
 - MCU: ESP32-S3 WROOM-1U-N16R8；
 - 屏幕: 240x240 圆形 LCD GC9A01 (1.28 寸)
 - 磁编码器：MT6701CT；
-- 3205 无刷直流电机（无限位）；
+- 3205a 无刷直流电机（无限位）；
 
+上传到嘉立创开源平台，审核中，待更新链接...
+
+### 3D 结构
+
+3D 结构的打印件已经上传到 Maker World ： [D-BOT 3D 模型](https://makerworld.com.cn/zh/models/1061527-d-bot-ge-ke-ai-kong-zhi-de-wu-shua-ping-heng-che-x#profileId-1100492)，总共包含 5 个打印件：
+
+- 车架-3205a_v1.1
+- 车轮适配件_v0.2
+- 电池卡扣+底座接口_v0.9
+- 屏幕架_v0.4
+- 支撑件_v0.1
 
 ## Getting Started
 
