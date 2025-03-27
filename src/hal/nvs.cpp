@@ -1,6 +1,13 @@
 #include "nvs.h"
 #include "config.h"
-#include "secrets.h"
+
+#define MQTT_SERVER "10.0.0.2"
+#define MQTT_PORT 1883
+#define MQTT_USER "mqttuser"
+#define MQTT_PASSWORD "mqttpassword"
+
+#define HOST               "dingmos"         // owner 
+#define MQTT_COMMAND_TOPIC "home"
 
 #define INIT_VALUE 0xdb
 
@@ -15,7 +22,6 @@ void nvs_init(void)
     prefs.putUChar(FFAT_KEY, 0);
     set_lcd_bk_brightness(LCD_BK_DEFAULT_BRIGHTNESS); //default lcd bk
     set_lcd_bk_timeout(LCD_BK_DEFAULT_TIMEOUT);       //default lcd bk time out 5mins
-    set_wifi_config(WIFI_SSID, WIFI_PASSWORD);
     set_mqtt_config(MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, MQTT_HOST );
     set_init_ffat(0);
     prefs.putUChar(INIT_KEY, INIT_VALUE);
@@ -24,9 +30,7 @@ void nvs_init(void)
     //lcd
     ncv_config.lcd_bk_timeout =  prefs.getUShort(LCD_BK_TIME_OUT_KEY, 0);
     ncv_config.lcd_bk_brightness =  prefs.getUShort(LCD_BK_BRIGHTNESS_KEY, 0);
-    //wifi
-    ncv_config.wifi_ssid = prefs.getString(WIFI_SSID_KEY, "");
-    ncv_config.wifi_password = prefs.getString(WIFI_PASSWORD_KEY, "");
+
     //mqtt
     ncv_config.mqtt_host = prefs.getString(MQTT_HOST_KEY, "");
     ncv_config.mqtt_port = prefs.getUInt(MQTT_PORT_KEY, 0);
@@ -61,12 +65,6 @@ uint16_t get_lcd_bk_brightness(void)
 uint16_t get_lcd_bk_timeout(void)
 {
     return ncv_config.lcd_bk_timeout;
-}
-
-void get_wifi_config(String &ssid,String &password)
-{
-    ssid = ncv_config.wifi_ssid;
-    password = ncv_config.wifi_password;
 }
 
 void get_mqtt_config(String &host,uint16_t &port,String &username,
@@ -116,18 +114,6 @@ void set_lcd_bk_timeout(uint16_t value)
     log_d("set LCD_BK_TIME_OUT_KEY Config: %d\n", value );
 }
 
-void set_wifi_config(String ssid,String password)
-{
-    Preferences prefs;     
-    prefs.begin(CONFIG_NAMESPACE); 
-    prefs.putString(WIFI_SSID_KEY, ssid);
-    prefs.putString(WIFI_PASSWORD_KEY, password);
-    prefs.end();
-    ncv_config.wifi_ssid = ssid;
-    ncv_config.wifi_password = password;
-    log_d("set WIFI_SSID_KEY Config: %s\n", ssid.c_str() );
-    log_d("set WIFI_PASSWORD_KEY Config: %s\n", password.c_str() );
-}
 
 void set_mqtt_config(String host, uint16_t port, String username,
                         String password,String topic)

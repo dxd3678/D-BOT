@@ -767,7 +767,7 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
 void motor_initFOC(BLDCMotor *motor, float offset)
 {
     if(offset > 0)  {
-        log_i("has a offset value %.2f\n", offset);
+        log_i("has a offset value %.2f.", offset);
         Direction foc_direction = Direction::CW;
         motor->initFOC(offset, foc_direction);
     } else {
@@ -795,11 +795,7 @@ void HAL::motor_init(void)
     digitalWrite(MO_EN, HIGH);  
 
 #ifdef XK_WIRELESS_PARAMETER
-    String ssid, password;
-    get_wifi_config(ssid, password);
-    const char *wifi_name = ssid.c_str();  
-    const char *wifi_pass = password.c_str(); 
-    if(!wireless.begin(wifi_name, wifi_pass)) {
+    if(!wireless.begin(HAL::get_wifi_ssid().c_str(), HAL::get_wifi_passwd().c_str())) {
         log_system(SYSTEM_ERR, "setup WiFi failed!");
     } else {
         log_system(SYSTEM_INFO, "ip %s", WiFi.localIP().toString().c_str());

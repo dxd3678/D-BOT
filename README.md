@@ -18,8 +18,6 @@ D-BOT 支持的特性：
 
 ![](https://pic-mos-1255408269.cos.ap-guangzhou.myqcloud.com/D-BOT-1.jpg)
 
-![](https://pic-mos-1255408269.cos.ap-guangzhou.myqcloud.com/D-BOT-2.jpg)
-
 ### 演示视频
 
 - [【开源】我做了一个不一样的桌面机器人](https://www.bilibili.com/video/BV15FXpYoEGG/)
@@ -34,7 +32,7 @@ D-BOT 支持的特性：
 - 磁编码器：MT6701CT；
 - 3205a 无刷直流电机（无限位）；
 
-上传到嘉立创开源平台，审核中，待更新链接...
+已经上传到嘉立创开源平台：[硬件开源链接](https://oshwhub.com/dingmos/kbc)
 
 ### 3D 结构
 
@@ -51,22 +49,17 @@ D-BOT 支持的特性：
 基本环境：
 - VScode + PlatformIO
 
-1. 基本配置
+1. 下载代码
 
-暂时使用文件配置 WiFi 等信息，后续将使用 WiFiManager 库来统一配置；
 ```
-git clone https://github.com/SmallPond/D-BOT
-
-# 重命名 src/secrets.h.example 文件为 src/secrets.h
-# 并且修改相关配置：WiFi 密码，MQTT Server 等
-cp src/secrets.h.example src/secrets.h
-
-# （Option）修改 config.h 文件的 MQTT_HOST 为你的名字
-# 该宏用来附带在 MQTT Topic 中
-#define MQTT_HOST               "dingmos"      
+git clone https://github.com/SmallPond/D-BOT  
 ```
 
-2. 编译 && flash && enjoy 
+2. 编译 && flash 
+
+3. 第一次启动需要配置 WiFi，连接 **DBOT_xxx** 的 WiFi，访问 192.168.4.1 进入网页配置并保存
+
+4. enjoy 
 
 ## 无线调参
 

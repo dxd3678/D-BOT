@@ -47,8 +47,6 @@
 
 typedef struct {
     bool init_ffat_flag;
-    String wifi_ssid;
-    String wifi_password;
     String mqtt_host;
     String mqtt_username;
     String mqtt_password;
@@ -76,8 +74,6 @@ uint16_t get_lcd_bk_brightness();
 void set_lcd_bk_brightness(uint16_t value);
 uint16_t get_lcd_bk_timeout();
 void set_lcd_bk_timeout(uint16_t value);
-void get_wifi_config(String &ssid,String &password);
-void set_wifi_config(String ssid,String password);
 void get_mqtt_config(String &host,uint16_t &port,String &username,String &password,String &topic);
 void set_mqtt_config(String host,uint16_t port,String username,String password,String topic);
 void set_imu_config(float gyroXoffset, float gyroYoffset, float gyroZoffset);

@@ -28,6 +28,8 @@ void HAL::Init()
     delay(1000);
     log_system(SYSTEM_INFO, "init system...");
     system_init();
+    log_system(SYSTEM_INFO, "init network...");
+    network_init();
     log_system(SYSTEM_INFO, "init mpu...");
     imu_init();
     log_system(SYSTEM_INFO, "init motor...");

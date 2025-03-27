@@ -3,7 +3,6 @@
 #include "app/app.h"
 #include "hal/hal.h"
 #include "hal/nvs.h"
-#include "web/WiFiAsyncWebServer.h"
 #include "app/bot/controller.h"
 #include "app/bot/bot.h"
 #include "app/bot/comm/espnow_comm.h"
@@ -32,7 +31,8 @@ void setup() {
     HAL::Init();
     // ffat_init();
     log_i("init comm...");
-    auto comm = (iot::SimpleComm *)new iot::UDPComm("tmp_ssid", "tmp", 6090);
+    auto comm = (iot::SimpleComm *)new iot::UDPComm(HAL::get_wifi_ssid(), 
+                                            HAL::get_wifi_passwd(), 6090);
     ESP_ERROR_CHECK(comm->Init());
     // uint8_t peerAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     // esp_now->SetPeerAddress(peerAddress);

@@ -18,13 +18,14 @@ int HAL::setup_wifi(void)
 {
     int retry_cnt = 0;
     int max_retry_cnt = 30;
-    String ssid, password;
-    get_wifi_config(ssid,password);
-    const char *wifi_name = ssid.c_str();  
-    const char *wifi_pass = password.c_str(); 
+    const char *ssid = HAL::get_wifi_ssid().c_str();
+    if (WiFi.status() == WL_CONNECTED) {
+        log_i("WiFi already connected.\n");
+        return 0;
+    }
 
     log_i("connecting to WiFi..: %s\n", ssid);
-    WiFi.begin(wifi_name, wifi_pass);
+    WiFi.begin(ssid, HAL::get_wifi_passwd().c_str());
     
     while (WiFi.status() != WL_CONNECTED && retry_cnt < max_retry_cnt) {
         Serial.print(".");
@@ -35,7 +36,7 @@ int HAL::setup_wifi(void)
    if (WiFi.status() == WL_CONNECTED) {
         log_i("Connected to network %s\n", ssid);
    } else {
-        log_i("WiFi connection timeout: %s\n", ssid);
+        log_e("WiFi connection timeout: %s\n", ssid);
         return -1;
    }
    return 0;

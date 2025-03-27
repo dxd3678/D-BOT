@@ -130,6 +130,10 @@ namespace HAL
     int system_ui_init(void);
     void log_system(int level, const char *format, ...);
     int system_ui_uninit();
+
+    int network_init(void);
+    std::string get_wifi_ssid(void);
+    std::string get_wifi_passwd(void);
 }
 
 
