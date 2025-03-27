@@ -67,7 +67,6 @@ void SettingView::SetCtrView(lv_obj_t* obj)
         default:
             break;
     }
-    printf("set view: %d\n",current_view);
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
 }
 /*
@@ -89,7 +88,6 @@ char* SettingView::GetEditedSettingName(void)
     return NULL;
 }
 
-//回到選單
 void SettingView::ClearCtrView(lv_obj_t *obj)
 {
     setting_t *setting = setting_map[obj];

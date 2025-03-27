@@ -104,32 +104,6 @@ void Setting::onTimerUpdate(lv_timer_t* timer)
     instance->Update();
 }
 
-void Setting::SetWiFiTaskState(bool enable){
-    if (enable) {
-        log_d("enable WiFi Task\n");
-        wifi_task_param.ui_wifi_label = View->m_ui->wifi_label;
-        xTaskCreatePinnedToCore(
-            wifi_server_begin,
-            "wifi_server_begin",
-            8192,
-            &wifi_task_param,        
-            4,
-            &handleTaskWiFi, 
-            ESP32_RUNNING_CORE
-    ); 
-    } else {
-        close_server();
-        vTaskDelay(4);
-        if (handleTaskWiFi != NULL){
-            //vTaskSuspend(handleTaskWiFi);  //暂停执行
-            log_d("disable WiFi Task\n");
-            vTaskDelete(handleTaskWiFi);
-            handleTaskWiFi = NULL;
-        }
-    }
-    
-}
-
 
 void Setting::SettingEventHandler(lv_event_t* event, lv_event_code_t code)
 {
@@ -161,11 +135,7 @@ void Setting::SettingEventHandler(lv_event_t* event, lv_event_code_t code)
                 case DEFAULT_VIEW:
                     log_d("select DEFAULT_VIEW \n");
                 case WIFI_SETTING_VIEW:
-                    log_d("select WIFI_SETTING_VIEW \n");
-                    SetWiFiTaskState(true);
-                    HAL::encoder_disable();
-                    View->SetPlaygroundMode(WIFI_SETTING_VIEW);
-                    Model->ChangeMotorMode(MOTOR_UNBOUND_COARSE_DETENTS);
+                    log_e("wifi setting is disabled.\n");
                     break;
                 case LCD_BK_TIMEOUT_SETTING_VIEW:
                     log_d("select LCD_BK_TIMEOUT_SETTING_VIEW \n");
@@ -185,7 +155,7 @@ void Setting::SettingEventHandler(lv_event_t* event, lv_event_code_t code)
         } else {
             switch(((SettingView*)View)->GetViewMode()){
                 case DEFAULT_VIEW:
-                        log_d("Enter DEFAULT_VIEW \n");
+                    log_d("Enter DEFAULT_VIEW \n");
                 case WIFI_SETTING_VIEW:
                     log_d("Enter WIFI_SETTING_VIEW Press\n");
                     break;
@@ -213,7 +183,6 @@ void Setting::SettingEventHandler(lv_event_t* event, lv_event_code_t code)
         printf("Setting: LV_EVENT_LONG_PRESSED\n");
         if (lv_obj_has_state(obj, LV_STATE_EDITED)) {
             View->ClearCtrView(obj);
-            SetWiFiTaskState(false);
             lv_obj_clear_state(obj, LV_STATE_EDITED);
             HAL::encoder_enable();
             View->SetPlaygroundMode(app_mode);

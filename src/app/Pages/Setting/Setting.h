@@ -2,7 +2,6 @@
 #define __SETTING_H__
 
 
-#include "web/WiFiAsyncWebServer.h"
 #include "SettingModel.h"
 #include "SettingView.h"
 #include "config.h"
@@ -26,7 +25,6 @@ namespace Page
         virtual void onViewDidUnload();
 
         void SettingEventHandler(lv_event_t* event, lv_event_code_t code);
-        void SetWiFiTaskState(bool enable);
 
     private:
         void Update();
@@ -38,7 +36,6 @@ namespace Page
         SettingView* View;
         SettingModel* Model;
         lv_timer_t* timer;
-        TaskParams wifi_task_param; 
     };
 }
 
