@@ -23,7 +23,7 @@ void Menu::onViewLoad()
 	Model.Init();
 	View.Create(root);
 	AttachEvent(root, onPlaygroundEvent);
-	AttachEvent(View.ui.dialpad.icon, onSuperDialEvent);
+	// AttachEvent(View.ui.dialpad.icon, onSuperDialEvent);
 	AttachEvent(View.ui.switches.icon, onPlaygroundEvent);
 	AttachEvent(View.ui.hass.icon, onHassEvent);
 	AttachEvent(View.ui.system.icon, onSystemEvent);

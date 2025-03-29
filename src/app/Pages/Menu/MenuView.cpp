@@ -24,17 +24,17 @@ void MenuView::Create(lv_obj_t* root)
 	Style_Init();
 
 	/* Item Super Dial */
-	Item_Create(
-		&ui.dialpad,
-		root,
-		"S-Dial",
-		"dialpad",
+	// Item_Create(
+	// 	&ui.dialpad,
+	// 	root,
+	// 	"S-Dial",
+	// 	"dialpad",
 
-		"Surface Dial"
-		"Control\n"
-		"Your PC\n"
-		"with X-Knob\n"
-	);
+	// 	"Surface Dial"
+	// 	"Control\n"
+	// 	"Your PC\n"
+	// 	"with X-Knob\n"
+	// );
 
 	Item_Create(
 		&ui.switches,
