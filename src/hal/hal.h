@@ -56,6 +56,8 @@ typedef enum
 // #define BOT_MAX_STEERING 500 
 /** no feedback */
 #define BOT_MAX_STEERING 60
+
+
 #ifdef XK_WIRELESS_PARAMETER
 extern WirelessTuning wireless;
 #endif
@@ -67,6 +69,7 @@ extern bool g_system_calibration;
 extern TaskHandle_t handleTaskMotor;
 extern TaskHandle_t handleTaskIMU;
 
+typedef void (* cmd_cb)(char*);
 namespace HAL
 {
 
@@ -134,6 +137,10 @@ namespace HAL
     int network_init(void);
     std::string get_wifi_ssid(void);
     std::string get_wifi_passwd(void);
+
+    int wireless_tuning_init(void);
+    WirelessTuning &get_wl_tuning(void);
+    int add_tuning_cmd(char id, cmd_cb cb, char* label);
 }
 
 

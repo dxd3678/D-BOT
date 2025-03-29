@@ -22,7 +22,7 @@ void HAL::Init()
     display_init();
     // system_ui_init();
     buzz_init();
-    // buzz_tone(700, 30);
+    buzz_tone(700, 30);
     log_system(SYSTEM_INFO, "init audio...");
     audio_init();
     delay(1000);
@@ -30,6 +30,10 @@ void HAL::Init()
     system_init();
     log_system(SYSTEM_INFO, "init network...");
     network_init();
+#ifdef XK_WIRELESS_PARAMETER
+    log_system(SYSTEM_INFO, "init wireless tuning...");
+    wireless_tuning_init();
+#endif
     log_system(SYSTEM_INFO, "init mpu...");
     imu_init();
     log_system(SYSTEM_INFO, "init motor...");

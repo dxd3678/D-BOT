@@ -61,4 +61,6 @@
 #define CONFIG_MPU_SDA                39
 #define CONFIG_MPU_SCL                38
 
+#define WIRELESS_TUNING_PORT      (4242)
+
 #endif 

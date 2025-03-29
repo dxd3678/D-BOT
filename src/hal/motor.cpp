@@ -2,7 +2,6 @@
 #include "motor.h"
 #include <SimpleFOC.h>
 #include "app/Accounts/Account_Master.h"
-#include "wireless_tuning.h"
 #include "nvs.h"
 
 SPIClass* hspi = NULL;
@@ -36,7 +35,7 @@ LowPassFilter lpf_steering = {
 // control algorithm parametersw
 // stabilisation pid
 // 初始值 P0.3 D: 0.02  -- 0.18 0.024
-PIDController pid_stb{
+PIDController pid_stb {
     .P = 0.3, .I = 0, .D = 0.008, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE 
 }; 
@@ -44,7 +43,7 @@ PIDController pid_stb{
 #define PID_VEL_P (0.3)
 #define PID_VEL_I (0.02)
 #define PID_VEL_D (0.00)
-PIDController pid_vel{
+PIDController pid_vel {
     .P = PID_VEL_P, .I = PID_VEL_I, .D = PID_VEL_D, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE
 };
@@ -54,13 +53,10 @@ PIDController pid_vel_tmp{
     .limit = MOTOR_MAX_TORQUE
 };
 
-PIDController pid_steering{
+PIDController pid_steering {
     .P = 0.01, .I = 0, .D = 0.00, .ramp = 100000, 
     .limit = MOTOR_MAX_TORQUE / 2
 };
-
-extern PIDController pid_bot_s;
-extern PIDController pid_bot_m;
 
 float g_mid_value = -2; // 偏置参数
 float g_throttle = 0;
@@ -229,60 +225,7 @@ struct motor_stat {
 
 struct motor_stat motor_s[MAX_MOTOR_NUM];
 
-//  ------------monitor--------------------
-#ifdef XK_WIRELESS_PARAMETER
 
-WirelessTuning wireless = WirelessTuning(4242);
-Commander commander = Commander(wireless, '\n', false);
-
-#else 
-
-Commander commander = Commander(Serial, '\n', false);
-#endif
-
-void on_stb_pid(char* cmd){commander.pid(&pid_stb, cmd);}
-void on_vel_pid(char* cmd){
-    commander.pid(&pid_vel, cmd);
-    commander.pid(&pid_vel_tmp, cmd);
-}
-void on_str_pid(char* cmd){commander.pid(&pid_steering, cmd);}
-void on_bot_s_pid(char* cmd){commander.pid(&pid_bot_s, cmd);}
-void on_bot_m_pid(char* cmd){commander.pid(&pid_bot_m, cmd);}
-void on_store_parameter(char* cmd) 
-{
-    nvs_set_pid_config(PID_S_CONFIG, pid_stb);
-    nvs_set_pid_config(PID_V_CONFIG, pid_vel);
-    nvs_set_pid_config(PID_T_CONFIG, pid_steering);
-    nvs_set_pid_config(PID_R_CONFIG, pid_bot_m);
-    nvs_set_pid_config(PID_B_CONFIG, pid_bot_s);
-    nvs_set_float(NVS_D_BOT, MACHINE_MID_VALUE_KEY, g_mid_value);
-    HAL::audio_play_music("BattChargeStart");
-}
-
-int ctrl_restore_parameter()
-{
-    int rc = 0;
-    if (nvs_get_pid_config(PID_S_CONFIG, pid_stb) 
-        || nvs_get_pid_config(PID_V_CONFIG, pid_vel) 
-        || nvs_get_pid_config(PID_T_CONFIG, pid_steering)
-        || nvs_get_pid_config(PID_R_CONFIG, pid_bot_m)
-        || nvs_get_pid_config(PID_B_CONFIG, pid_bot_s)
-        || nvs_get_float(NVS_D_BOT, MACHINE_MID_VALUE_KEY, g_mid_value)) {
-        return -1;
-    }
-    pid_vel_tmp=pid_vel;
-    return 0;
-}
-void on_imu_offset(char *cmd)
-{
-    commander.scalar(&g_mid_value, cmd);
-    log_i("imu offset change to %.2f\n", g_mid_value);
-}
-
-void on_motor(char* cmd){
-    commander.motor(&motor_0, cmd);
-    commander.motor(&motor_1, cmd);
-}
 // -------------monitor--------------------
 //目标变量
 static float readMySensorCallback(void) {
@@ -523,10 +466,6 @@ static int run_balance_task(BLDCMotor *motor_l, BLDCMotor *motor_r,
 
     motor_l->target = (all_adj + steering_adj);
     motor_r->target = -(all_adj - steering_adj);
-    // if (steering != 0) 
-    //     wireless.printf("steering: %f, gyro_z: %f std: %f, speed: %f, steering: %f, left: %f, right: %f.\n", 
-    //                 steering, gyro_z, stb_adj, speed_adj, steering_adj, 
-    //                 motor_l->target, motor_r->target);
 out:
     motor_l->move();
     motor_r->move();
@@ -712,7 +651,6 @@ void motor_task(void *pvParameters)
 
         motor_0.monitor();
         // motor_0.monitor();
-        commander.run();
         // Serial.println(motor_config[id].position);
         vTaskDelay(pdMS_TO_TICKS(5));
     }
@@ -754,7 +692,7 @@ static void init_motor(BLDCMotor *motor,BLDCDriver3PWM *driver,GenericSensor *se
     motor->monitor_variables = _MON_TARGET | _MON_VEL | _MON_ANGLE;
 
 #ifdef XK_WIRELESS_PARAMETER
-    motor->useMonitoring(wireless);
+    motor->useMonitoring(HAL::get_wl_tuning());
 #else
     motor->useMonitoring(Serial);
 #endif
@@ -794,19 +732,6 @@ void HAL::motor_init(void)
     pinMode(MO_EN, OUTPUT);
     digitalWrite(MO_EN, HIGH);  
 
-#ifdef XK_WIRELESS_PARAMETER
-    if(!wireless.begin(HAL::get_wifi_ssid().c_str(), HAL::get_wifi_passwd().c_str())) {
-        log_system(SYSTEM_ERR, "setup WiFi failed!");
-    } else {
-        log_system(SYSTEM_INFO, "ip %s", WiFi.localIP().toString().c_str());
-    }
-    // ret = wireless.begin("ESP_DINGMOS", "12344321", AP_MODE);
-#endif
-    log_system(SYSTEM_INFO, "getting parameter from nvs...");
-    if (ctrl_restore_parameter()) {
-        log_system(SYSTEM_ERR, "failed to get pid parameter from nvs, using default.");
-    }
-
     log_i("[motor]: calibration %s", g_system_calibration?"true":"false");
     if (g_system_calibration == false) {
         struct motor_offset offset;
@@ -830,20 +755,6 @@ void HAL::motor_init(void)
     log_i("Motor ready.");
     log_i("Set the target velocity using serial terminal:");
 
-    commander.add('M', on_motor, const_cast<char*>("my motor"));
-
-
-    commander.add('S', on_stb_pid, const_cast<char*>("PID stable"));
-    commander.add('V', on_vel_pid, const_cast<char*>("PID vel"));
-    commander.add('T', on_str_pid, const_cast<char*>("PID str"));
-    commander.add('B', on_bot_s_pid, const_cast<char*>("PID bot spin"));
-    commander.add('R', on_bot_m_pid, const_cast<char*>("PID bot move"));
-    
-    commander.add('X', on_imu_offset, const_cast<char*>("imu offset"));
-    commander.add('C', on_store_parameter, 
-                const_cast<char*>("store all wirelss tuning parameter"));
-
-    // commander.add('M', onMotor, "my motor");
     actMotorStatus = new Account("MotorStatus", AccountSystem::Broker(), sizeof(MotorStatusInfo), nullptr);
     actBotStatus = new Account("BotStatus", AccountSystem::Broker(), sizeof(AccountSystem::BotStatusInfo), nullptr);
     ret = xTaskCreatePinnedToCore(
@@ -888,9 +799,6 @@ void HAL::motor_set_speed(float speed, float steering)
         g_throttle = (float)speed;
         g_steering = (float)-steering;
         // log_e("throttle: %.2f steering %.2f.", g_throttle, g_steering);
-#ifdef XK_WIRELESS_PARAMETER
-        // wireless.printf("throttle: %.2f steering %.2f.\n", g_throttle, g_steering);
-#endif
     }
     
 }
