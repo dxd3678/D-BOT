@@ -735,7 +735,7 @@ void HAL::motor_init(void)
     log_i("[motor]: calibration %s", g_system_calibration?"true":"false");
     if (g_system_calibration == false) {
         struct motor_offset offset;
-        if(nvs_get_motor_offset(&offset) == 0) {
+        if(!nvs_get_motor_offset(&offset)) {
             log_i("[motor]: set offset %f, %f", offset.l_offset, offset.r_offset);
             motor_initFOC(&motor_0, offset.l_offset);
             motor_initFOC(&motor_1, offset.r_offset);

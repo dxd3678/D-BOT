@@ -154,7 +154,7 @@ int get_imu_offset(struct imu_offset* offset)
     Preferences preferences;
     int rc = 0;
 
-    if (preferences.begin(IMU_CONFIG) == false) {
+    if (preferences.begin(IMU_CONFIG, true) == false) {
         return -1;
     }
 
@@ -177,13 +177,13 @@ void nvs_set_motor_config(float motor_l_offset, float motor_r_offset)
 
 int nvs_get_motor_offset(struct motor_offset *offset) 
 {
-    Preferences preferences;
-    if (preferences.begin(MOTOR_CONFIG) == false) {
+    Preferences prefs;
+    if (prefs.begin(MOTOR_CONFIG, true) == false) {
         return -1;
     }
-    offset->l_offset = preferences.getFloat(MOTOR_LEFT_OFFSET, 0.0);
-    offset->r_offset = preferences.getFloat(MOTOR_RIGHT_OFFSET, 0.0);
-    preferences.end();
+    offset->l_offset = prefs.getFloat(MOTOR_LEFT_OFFSET, 0.0);
+    offset->r_offset = prefs.getFloat(MOTOR_RIGHT_OFFSET, 0.0);
+    prefs.end();
 
     return 0;
 }
