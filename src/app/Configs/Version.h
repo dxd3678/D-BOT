@@ -24,9 +24,9 @@
 #define __VERSION_H
 
 /* Firmware Version */
-#define VERSION_FIRMWARE_NAME   "x-knob"
-#define VERSION_SOFTWARE        "v1.3.1"
-#define VERSION_HARDWARE        "v1.1"
+#define VERSION_FIRMWARE_NAME   "D-BOT"
+#define VERSION_SOFTWARE        "v0.1.0"
+#define VERSION_HARDWARE        "v0.1"
 #define VERSION_AUTHOR_NAME     "dingmos"
 
 /* Number to string macro */
