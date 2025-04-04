@@ -57,24 +57,36 @@ git clone https://github.com/SmallPond/D-BOT
 
 2. 编译 && flash 
 
-3. 第一次启动需要配置 WiFi，连接 **DBOT_xxx** 的 WiFi，访问 192.168.4.1 进入网页配置并保存
+3. 首次启动
+
+- 配置 WiFi，连接 **DBOT_xxx** 的 WiFi，访问 192.168.4.1 进入网页配置并保存，D-BOT 将会自动重启
+- 启动后会自动进行陀螺仪（MPU6050）自动校准和电机自动校准（左右电机依次顺逆时针转动）；如果你在完全固定组装前启动过，电机将可能不会再校准导致电机工作不正常；
+  - **强制校准方法**：在启动听到“叮”一声后，立马按住 boot 键（主控板最外侧的按键）2 秒不动，等待一会应该能看到电机开始校准；或者**直接 0 地址重刷 merge 固件，这将清除所有配置**。
+- 因为 mpu6050 不是直接板载在主控板的，焊接的差异可能导致平衡（机械）中值有差异，可以通过无线调参修改，有能力的同学也可以直接修改代码后重新编译；
 
 4. enjoy 
+
+## AI 控制
+
+D-BOT 的 AI 控制代码开源在 [xiaozhi-esp32](https://github.com/SmallPond/xiaozhi-esp32) 仓库，当前仅优先支持 [45coll-sparkbot](https://gitee.com/coll45/sparkbot-45coll) 开发板。
+
+如果你有其他版本的小智，可以在 [xiaozhi-esp32](https://github.com/SmallPond/xiaozhi-esp32) 的 issue 里提交申请，详细描述板子型号。我统一支持后发 release 固件。当然有能力的同学也可以参考我的修改自行增加其他开发板的支持。
 
 ## 无线调参
 
 1. 配置 [SimpleFOCStudio](https://github.com/SmallPond/SimpleFOCStudio)基本环境 ；
 2. 通过串口获取 D-BOT 启动日志打印的 IP 地址；
-3. 在 SimpleFOCStudio 界面中配置 IP 和端口号（默认为 4242）
+3. 在 SimpleFOCStudio 界面中配置 IP 和端口号（默认为 4242），连接成功后，在 Command Line interface 处输入以下指令调参；
 
 | 对象 | 命令 | 示例 |
 | :-----| ----: | :----: |
-| 直立环 | S | SP0.2——直立环 P 项设置为 0.2 |
+| 直立环 | S | SP0.2——直立环 P 项设置为 0.2， SP不带参数则为获取当前 P 项 |
 | 速度环 | V | VP0.2——速度环 P 项设置为 0.2 |
 | 转向环 | T | TP0.2——转向环 P 项设置为 0.2 |
 | D-BOT 前后移动闭环控制 | R | RP0.2|
 | D-BOT 转向闭环控制 | B | BP0.2|
-| 机械中值 | X | X-3——机械中值设置为 -3 |
+| 机械中值 | X | X-3——机械中值设置为 -3（默认值为 -2，正常直立时 D-BOT 向前走，应该减小该值） |
+|保存所有参数|C|C|
 
 ## 致谢开源
 
