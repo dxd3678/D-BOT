@@ -45,6 +45,9 @@
 #define NVS_D_BOT   "d_bot"
 #define MACHINE_MID_VALUE_KEY "mid_value"
 
+#define GAME_CTRLR   "game_ctrlr"
+#define GAME_CTRLR_ADDR_KEY "game_ctrlr_addr"
+
 typedef struct {
     bool init_ffat_flag;
     String mqtt_host;
@@ -85,4 +88,7 @@ int nvs_set_pid_config(const char *name, PIDController pid);
 int nvs_get_pid_config(const char *name, PIDController &pid);
 int nvs_set_float(const char *name, const char *key, float vaule);
 int nvs_get_float(const char *name, const char *key, float &vaule);
+
+int nvs_set_string(const char *name, const char *key, const char *str);
+int nvs_get_string(const char *name, const char *key, char *buf, int len);
 #endif

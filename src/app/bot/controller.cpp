@@ -161,9 +161,9 @@ void controller_update_task(void *parameter)
 }
 
 
-void controller_init(void)
+void controller_init(const char *ble_addr)
 {
-    ble_ctrl.setup();
+    ble_ctrl.setup(ble_addr);
 
     btn_a.EventAttach(controller_btn_a_handler);
     btn_b.EventAttach(controller_btn_b_handler);

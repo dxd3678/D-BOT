@@ -42,7 +42,7 @@ void App_Init()
     manager.Install("Menu", "Pages/Menu");
     manager.Install("Startup", "Pages/Startup");
     manager.Install("Playground", "Pages/Playground");
-    manager.Install("SurfaceDial", "Pages/SurfaceDial");
+    // manager.Install("SurfaceDial", "Pages/SurfaceDial");
     manager.Install("Hass","Pages/Hass");
     manager.Install("Setting","Pages/Setting");
     manager.Install("WiFi","Pages/WiFi");

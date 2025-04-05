@@ -21,7 +21,7 @@ int UDPComm::Init() {
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid_.c_str(), password_.c_str());
 
-    Serial.print("Connecting to WiFi");
+    log_i("Connecting to WiFi...");
     unsigned long startTime = millis();
     while (WiFi.status() != WL_CONNECTED) {
         if (millis() - startTime > 10000) { // Timeout after 10 seconds
@@ -32,9 +32,8 @@ int UDPComm::Init() {
         Serial.print(".");
     }
 
-    Serial.println("\nWiFi connected");
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
+    log_i("\nWiFi connected");
+    log_i("IP Address: %s", WiFi.localIP().toString().c_str());
 
     // Start UDP
     udp_.begin(local_port_);

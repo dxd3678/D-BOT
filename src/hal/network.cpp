@@ -5,9 +5,15 @@
 */
 #include "hal.h"
 #include "WiFiManager.h"
+#include "nvs.h"
 
 
 WiFiManager wm;
+
+// 参数名、标签、默认值、最大长度
+WiFiManagerParameter game_ctrlr_addr("game_ctrlr_addr", 
+                    "手柄蓝牙地址", "04:0A:11:11:90:10", 18);
+
 
 void config_mode_cb(WiFiManager *wifi_manager)
 {
@@ -20,6 +26,9 @@ void config_mode_cb(WiFiManager *wifi_manager)
 
 void save_config_cb()
 {
+    log_i("save game ctrlr addr %s", game_ctrlr_addr.getValue());
+    nvs_set_string(GAME_CTRLR, GAME_CTRLR_ADDR_KEY, 
+                    game_ctrlr_addr.getValue());
     log_i("配置已保存，准备重启");
     ESP.restart();
 }
@@ -30,6 +39,7 @@ int HAL::network_init(void)
     macAddress.replace(":", "");
     String apName = "DBOT_" + macAddress.substring(macAddress.length() - 6);
 
+    wm.addParameter(&game_ctrlr_addr);
     wm.setAPCallback(config_mode_cb);
     wm.setSaveConfigCallback(save_config_cb);
     wm.setConfigPortalTimeout(300);

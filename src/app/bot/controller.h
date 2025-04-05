@@ -8,7 +8,7 @@
 
 #ifndef __CONTROLLER_H__
 #define __CONTROLLER_H__
-
-void controller_init(void);
+#define DEFAULTU_BLE_ADDR "04:0A:11:11:90:10"
+void controller_init(const char *ble_addr);
 
 #endif

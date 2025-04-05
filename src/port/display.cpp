@@ -10,7 +10,6 @@ void TaskLvglUpdate(void* parameter)
     for (;;)
     {
         lv_task_handler();
-
         delay(5);
     }
 }

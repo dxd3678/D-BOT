@@ -237,3 +237,31 @@ int nvs_get_float(const char *name, const char *key, float &vaule)
     prefs.end();
     return 0;
 }
+
+int nvs_set_string(const char *name, const char *key, const char *str)
+{
+    Preferences prefs;
+    int ret = 0;
+    prefs.begin(name); 
+    ret = prefs.putString(key, str);
+    prefs.end();
+
+    if (ret == 0) {
+        return -1;
+    }
+    return 0;
+}
+
+int nvs_get_string(const char *name, const char *key, char *buf, int len)
+{
+    Preferences prefs;
+    int ret = 0;
+    prefs.begin(name); 
+    ret = prefs.getString(key, buf, len);
+    prefs.end();
+
+    if (ret == 0) {
+        return -1;
+    }
+    return 0;
+}
