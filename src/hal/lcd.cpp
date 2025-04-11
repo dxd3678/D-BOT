@@ -61,15 +61,15 @@ void HAL::lcd_brightness_init()
     account = new Account("LcdBrightness", AccountSystem::Broker(), 0, NULL);
     account->SetEventCallback(onMotorEvent);
     account->Subscribe("MotorStatus");
-    xTaskCreatePinnedToCore(
-        TaskLcdBrightnessUpdate,
-        "LcdBkThread",
-        4096,
-        nullptr,
-        2,
-        &handleTaskLcdBrightness,
-        ESP32_RUNNING_CORE
-    );
+    // xTaskCreatePinnedToCore(
+    //     TaskLcdBrightnessUpdate,
+    //     "LcdBkThread",
+    //     4096,
+    //     nullptr,
+    //     2,
+    //     &handleTaskLcdBrightness,
+    //     ESP32_RUNNING_CORE
+    // );
     // update_motor_config(0);
 }
 

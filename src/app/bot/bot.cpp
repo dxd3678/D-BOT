@@ -13,8 +13,8 @@ int g_bot_ctrl_type = BOT_CONTROL_TYPE_AI;
 
 #define WHEEL_DIAMETER 6
 #define WHEEL_CIRCUMFERENCE (WHEEL_DIAMETER * M_PI)
-#define BOT_MOVE_END_OFFSET (15)
-#define BOT_SPIN_END_OFFSET (3)
+#define BOT_MOVE_END_OFFSET (30)
+#define BOT_SPIN_END_OFFSET (10)
 #define BOT_ACTION_END_TIME (200)
 PIDController pid_bot_s {
     .P = 6, .I = 0, .D = 2, .ramp = 100000, 
