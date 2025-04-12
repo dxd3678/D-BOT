@@ -7,13 +7,14 @@
 
 D-BOT 是一个桌面机器人（Desktop Bot），可通过 AI 精确控制，同时具备 [X-Knob](https://github.com/SmallPond/X-Knob) 的全功能。我同时更想称 D-BOT 为小探索家（Discovery Bot），它能探索这个世界，同时也是我对我自己的一次探索：第一次完整尝试 3D 建模和 PCB 设计。
 
+
 D-BOT 支持的特性：
 - [x] [X-Knob](https://github.com/SmallPond/X-Knob) 原生全功能支持;
 - [x] 手柄遥控控制（蓝牙）;
-- [x] 无线调参数：
+- [x] 无线调参：
   - [x] 基于 [SimpleFOCStudio](https://github.com/SmallPond/SimpleFOCStudio) （尝试合入到 upstream 中，但作者太忙一直没时间 review，暂时使用我 fork 的仓库）修改了上位机，通过无线网络连接;
   - [x] 在 D-BOT 端通过 [WirelessTuning](https://github.com/SmallPond/WirelessTuning) 库，作为胶水层无缝适配 SimpleFOC 的 monitor 库；
-- [x] 小智 AI 控制，化身 AI 机器人（狗头；
+- [x] 小智 AI 控制，化身 AI 机器人；
 
 
 ![](https://pic-mos-1255408269.cos.ap-guangzhou.myqcloud.com/D-BOT-1.jpg)
@@ -72,6 +73,15 @@ D-BOT 的 AI 控制代码开源在 [xiaozhi-esp32](https://github.com/SmallPond/
 
 如果你有其他版本的小智，可以在 [xiaozhi-esp32](https://github.com/SmallPond/xiaozhi-esp32) 的 issue 里提交申请，详细描述板子型号。我统一支持后发 release 固件。当然有能力的同学也可以参考我的修改自行增加其他开发板的支持。
 
+## 手柄遥控
+
+当前手柄遥控仅支持和我同款的手柄，库开源在[ESP32 解析蓝牙手柄信号](https://github.com/SmallPond/ble_ctrl)。X-Box 理论上可以使用其他库解析。
+
+- 以 L + Home 方式启动手柄；
+- 通过小程序“谷雨蓝牙”扫描出手柄蓝牙，获取蓝牙地址，类似 “04:0A:11:11:90:10”。我现在打开这个工具扫描出来的是 UUID 形式的，应该需要改代码，或者通过其他方法获取上述格式的蓝牙地址，有能力的同学可以再研究下。
+- 刷 D-BOT v0.2 及其以上版本固件，在配网界面填入蓝牙地址；重启后打开手柄就能自动连接；
+- D-BOT 默认为 AI 控制模式，按下 A 键切换为遥控模式后，即可通过摇杆控制。
+
 ## 无线调参
 
 1. 配置 [SimpleFOCStudio](https://github.com/SmallPond/SimpleFOCStudio)基本环境 ；
@@ -97,30 +107,8 @@ D-BOT 的 AI 控制代码开源在 [xiaozhi-esp32](https://github.com/SmallPond/
 - [sparkbot-45coll](https://gitee.com/coll45/sparkbot-45coll)
 - [SimpleFOCStudio](https://github.com/JorgeMaker/SimpleFOCStudio)
 - [xiaozhi-esp32](https://github.com/78/xiaozhi-esp32)
-  
 
-## 其他
+## Star History
 
-### 开发过程的一些问题记录
+[![Star History Chart](https://api.star-history.com/svg?repos=SmallPond/D-BOT&type=Date)](https://www.star-history.com/#SmallPond/D-BOT&Date)
 
-1. Stack canary watchpoint triggered 通常是因为 FreeRTOS 的 task 栈设置得太小，适当增大 stack depth 即可解决。
-
-- [Why do I get the Debug exception reason: Stack canary watchpoint triggered (main)?](https://stackoverflow.com/questions/56779459/why-do-i-get-the-debug-exception-reason-stack-canary-watchpoint-triggered-main)
-
-```
-Guru Meditation Error: Core  1 panic'ed (Unhandled debug exception). 
-Debug exception reason: Stack canary watchpoint triggered (BuzzerThread)
-```
-
-2. esp32 debug，打印出错的栈信息
-
-```bash
-export PATH=$PATH:~/.platformio/packages/toolchain-xtensa-esp32s3/bin
-xtensa-esp32s3-elf-addr2line.exe -pfiaC -e .pio/build/esp32-s3-devkitc-1/firmware.elf 0x42007e97
-```
-
-3. MPU6050 Z 轴（YAW）零漂问题，最好每次都进行陀螺仪的静止校准`mpu.calcGyroOffsets(true);`，不然在控制指定角度转动时会不准（yaw 角会不断上涨/下降）；
-  
-### 一些工具
-
-1. [在线钢琴模拟器](https://www.xiwnn.com/piano/)
