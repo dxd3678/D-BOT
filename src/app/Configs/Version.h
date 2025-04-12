@@ -25,7 +25,7 @@
 
 /* Firmware Version */
 #define VERSION_FIRMWARE_NAME   "D-BOT"
-#define VERSION_SOFTWARE        "v0.1.0"
+#define VERSION_SOFTWARE        "v0.2.0"
 #define VERSION_HARDWARE        "v0.1"
 #define VERSION_AUTHOR_NAME     "dingmos"
 
