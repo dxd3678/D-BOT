@@ -5,10 +5,8 @@
 
 </div>
 
-D-BOT 是一个桌面机器人（Desktop Bot），可通过 AI 精确控制，同时具备 [X-Knob](https://github.com/SmallPond/X-Knob) 的全功能。我同时更想称 D-BOT 为小探索家（Discovery Bot），它能探索这个世界，同时也是我对我自己的一次探索：第一次完整尝试 3D 建模和 PCB 设计。
+D-BOT（Discovery Bot）是一个桌面机器人，可通过 AI 精确控制，同时具备 [X-Knob](https://github.com/SmallPond/X-Knob) 的全功能。D-BOT 支持以下特性：
 
-
-D-BOT 支持的特性：
 - [x] [X-Knob](https://github.com/SmallPond/X-Knob) 原生全功能支持;
 - [x] 手柄遥控控制（蓝牙）;
 - [x] 无线调参：
@@ -31,7 +29,7 @@ D-BOT 支持的特性：
 - MCU: ESP32-S3 WROOM-1U-N16R8；
 - 屏幕: 240x240 圆形 LCD GC9A01 (1.28 寸)
 - 磁编码器：MT6701CT；
-- 3205a 无刷直流电机（无限位）；
+- ~~3205a 无刷直流电机（无限位）；~~ 适配了量更多的 3205b 无刷直流电机（无限位）
 
 已经上传到嘉立创开源平台：[硬件开源链接](https://oshwhub.com/dingmos/kbc)
 
@@ -39,7 +37,7 @@ D-BOT 支持的特性：
 
 3D 结构的打印件已经上传到 Maker World ： [D-BOT 3D 模型](https://makerworld.com.cn/zh/models/1061527-d-bot-ge-ke-ai-kong-zhi-de-wu-shua-ping-heng-che-x#profileId-1100492)，总共包含 5 个打印件：
 
-- 车架-3205a_v1.1
+- ~~车架-3205a_v1.1~~ 车架 3205b_v0.3
 - 车轮适配件_v0.2
 - 电池卡扣+底座接口_v0.9
 - 屏幕架_v0.4
