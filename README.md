@@ -27,8 +27,7 @@ D-BOT 交流群：954041464
 ### 硬件
 
 主要硬件列表：
-- 4 块 PCB：主控板 + 驱动板 \* 2 + 屏幕板；
-- 电池板: 直接使用饭佬开源平衡车的电池板，**但不用焊接任何元件**；
+- 5 块 PCB：主控板 + 驱动板 \* 2 + 屏幕板 + 电池板；
 - MCU: ESP32-S3 WROOM-1U-N16R8；
 - 屏幕: 240x240 圆形 LCD GC9A01 (1.28 寸)
 - 磁编码器：MT6701CT；
@@ -70,9 +69,14 @@ git clone https://github.com/SmallPond/D-BOT
 
 ## AI 控制
 
-D-BOT 的 AI 控制代码开源在 [xiaozhi-esp32](https://github.com/SmallPond/xiaozhi-esp32) 仓库，当前仅优先支持 [45coll-sparkbot](https://gitee.com/coll45/sparkbot-45coll) 开发板。
+D-BOT 的 AI 控制代码开源在 [xiaozhi-esp32](https://github.com/SmallPond/xiaozhi-esp32) 仓库。如果你有其他版本的小智，可以在 [xiaozhi-esp32 的 issue 里](https://github.com/SmallPond/xiaozhi-esp32) 提交申请，详细描述板子型号。我统一支持后发 release 固件。当然有能力的同学也可以参考我的修改自行增加其他开发板的支持。
 
-如果你有其他版本的小智，可以在 [xiaozhi-esp32](https://github.com/SmallPond/xiaozhi-esp32) 的 issue 里提交申请，详细描述板子型号。我统一支持后发 release 固件。当然有能力的同学也可以参考我的修改自行增加其他开发板的支持。
+当前已支持的开发板：
+- 45coll-sparkbot
+- 无名科技1.54寸WIFI版
+- Movecall Moji 小智AI衍生版
+- 立创·实战派ESP32-S3开发板
+- 面包板
 
 ## 手柄遥控
 
