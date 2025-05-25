@@ -15,11 +15,13 @@
 #define LCD_BK_TIME_OUT_KEY      "lcd_time"
 #define WIFI_SSID_KEY            "wifi_ssid"
 #define WIFI_PASSWORD_KEY        "wifi_password"
+
+#define MQTT_CONFIG              "mqtt_config"
 #define MQTT_HOST_KEY            "mqtt_host"
 #define MQTT_PORT_KEY            "mqtt_port"
 #define MQTT_USERNAME_KEY        "mqtt_username"
 #define MQTT_PASSWORD_KEY        "mqtt_password"
-#define MQTT_TPOIC_KEY           "mqtt_topic"
+#define MQTT_TPOIC_PREFIX_KEY    "mqtt_topic_prefix"
 
 #define IMU_CONFIG               "imu_config"
 #define IMU_GYRO_X_OFFSET        "xoffset"
@@ -50,14 +52,24 @@
 
 typedef struct {
     bool init_ffat_flag;
+    int lcd_bk_timeout;
+    int lcd_bk_brightness;
+} NvsConfig;
+
+
+#define MQTT_SERVER   "10.0.0.2"
+#define MQTT_PORT     1883
+#define MQTT_USER     "mqttuser"
+#define MQTT_PASSWORD "mqttpassword"
+#define TOPIC_PREFIX  "dingmos"         // owner 
+
+struct mqtt_config {
     String mqtt_host;
     String mqtt_username;
     String mqtt_password;
     int mqtt_port;
-    String mqtt_topic;
-    int lcd_bk_timeout;
-    int lcd_bk_brightness;
-} NvsConfig;
+    String mqtt_topic_prefix;
+};
 
 struct imu_offset {
     float xoffset;
@@ -77,8 +89,9 @@ uint16_t get_lcd_bk_brightness();
 void set_lcd_bk_brightness(uint16_t value);
 uint16_t get_lcd_bk_timeout();
 void set_lcd_bk_timeout(uint16_t value);
-void get_mqtt_config(String &host,uint16_t &port,String &username,String &password,String &topic);
-void set_mqtt_config(String host,uint16_t port,String username,String password,String topic);
+int nvs_get_mqtt_config(struct mqtt_config *mqtt_conf);
+int nvs_set_mqtt_config(String host, uint16_t port, String username, 
+                            String password, String topic_prefix);
 void set_imu_config(float gyroXoffset, float gyroYoffset, float gyroZoffset);
 int get_imu_offset(struct imu_offset *offset);
 void nvs_set_motor_config(float motor_l_offset, float motor_r_offset);

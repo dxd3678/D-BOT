@@ -106,6 +106,7 @@ namespace HAL
     int mqtt_publish(const char *topic, const char *playload);
     int mqtt_subscribe(const char *topic);
     int setup_wifi(void);
+    const char *mqtt_get_topic_frefix(void);
 
     void lcd_brightness_init();
     void set_lcd_brightness(int value);

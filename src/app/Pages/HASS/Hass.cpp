@@ -26,8 +26,7 @@ int hass_hal_send(const char *device_name, int knob_value)
 	uint16_t port;
 	String password, host, username, topic;
 
-	get_mqtt_config(host,port,username,password,topic);
-	const char * mqtt_topic = topic.c_str();
+	const char *mqtt_topic = HAL::mqtt_get_topic_frefix();
 	snprintf(topic_name, sizeof(topic_name),"%s/HOME/%s", mqtt_topic, device_name);
 	if (knob_value < HASS_MAX && playload_str[knob_value] != NULL) {
 		printf("mqtt send: %s:%s\n", topic_name, playload_str[knob_value]);

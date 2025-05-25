@@ -1,12 +1,6 @@
 #include "nvs.h"
 #include "config.h"
 
-#define MQTT_SERVER "10.0.0.2"
-#define MQTT_PORT 1883
-#define MQTT_USER "mqttuser"
-#define MQTT_PASSWORD "mqttpassword"
-
-#define HOST               "dingmos"         // owner 
 #define MQTT_COMMAND_TOPIC "home"
 
 #define INIT_VALUE 0xdb
@@ -22,7 +16,6 @@ void nvs_init(void)
     prefs.putUChar(FFAT_KEY, 0);
     set_lcd_bk_brightness(LCD_BK_DEFAULT_BRIGHTNESS); //default lcd bk
     set_lcd_bk_timeout(LCD_BK_DEFAULT_TIMEOUT);       //default lcd bk time out 5mins
-    set_mqtt_config(MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, MQTT_HOST );
     set_init_ffat(0);
     prefs.putUChar(INIT_KEY, INIT_VALUE);
 
@@ -31,12 +24,6 @@ void nvs_init(void)
     ncv_config.lcd_bk_timeout =  prefs.getUShort(LCD_BK_TIME_OUT_KEY, 0);
     ncv_config.lcd_bk_brightness =  prefs.getUShort(LCD_BK_BRIGHTNESS_KEY, 0);
 
-    //mqtt
-    ncv_config.mqtt_host = prefs.getString(MQTT_HOST_KEY, "");
-    ncv_config.mqtt_port = prefs.getUInt(MQTT_PORT_KEY, 0);
-    ncv_config.mqtt_username = prefs.getString(MQTT_USERNAME_KEY, "");
-    ncv_config.mqtt_password = prefs.getString(MQTT_PASSWORD_KEY, "");
-    ncv_config.mqtt_topic = prefs.getString(MQTT_TPOIC_KEY, "");
     
     log_d("get FFAT_KEY Config: %d\n", ncv_config.init_ffat_flag );
     log_d("get LCD_BK_TIME_OUT_KEY Config: %d\n", ncv_config.lcd_bk_timeout );
@@ -67,21 +54,6 @@ uint16_t get_lcd_bk_timeout(void)
     return ncv_config.lcd_bk_timeout;
 }
 
-void get_mqtt_config(String &host,uint16_t &port,String &username,
-                            String &password,String &topic)
-{
-    host =  ncv_config.mqtt_host;
-    port = ncv_config.mqtt_port;
-    username = ncv_config.mqtt_username;
-    password = ncv_config.mqtt_password;
-    topic = ncv_config.mqtt_topic;
-
-    log_d("get MQTT_HOST_KEY Config: %s\n", ncv_config.mqtt_host.c_str() );
-    log_d("get MQTT_PORT_KEY Config: %d\n", ncv_config.mqtt_port );
-    log_d("get MQTT_USERNAME_KEY Config: %s\n", ncv_config.mqtt_username.c_str() );
-    log_d("get MQTT_PASSWORD_KEY Config: %s\n", ncv_config.mqtt_password.c_str() );
-    log_d("get MQTT_TPOIC_KEY Config: %s\n", ncv_config.mqtt_topic.c_str() );
-}
 
 void set_init_ffat(uint8_t value)
 {
@@ -114,29 +86,51 @@ void set_lcd_bk_timeout(uint16_t value)
     log_d("set LCD_BK_TIME_OUT_KEY Config: %d\n", value );
 }
 
-
-void set_mqtt_config(String host, uint16_t port, String username,
-                        String password,String topic)
+int nvs_get_mqtt_config(struct mqtt_config *mqtt_conf)
 {
-    Preferences prefs;     
-    prefs.begin(CONFIG_NAMESPACE); 
+
+    Preferences prefs;
+    if (prefs.begin(MQTT_CONFIG, false) == false) {
+        return -1;
+    }
+    mqtt_conf->mqtt_host = prefs.getString(MQTT_HOST_KEY, MQTT_SERVER);
+    mqtt_conf->mqtt_port = prefs.getInt(MQTT_PORT_KEY, MQTT_PORT);
+    mqtt_conf->mqtt_username = prefs.getString(MQTT_USERNAME_KEY, MQTT_USER);
+    mqtt_conf->mqtt_password = prefs.getString(MQTT_PASSWORD_KEY, MQTT_PASSWORD);
+    mqtt_conf->mqtt_topic_prefix = prefs.getString(MQTT_TPOIC_PREFIX_KEY,
+                                                     TOPIC_PREFIX);
+    prefs.end();
+
+
+    log_d("get MQTT_HOST_KEY Config: %s\n", mqtt_conf->mqtt_host.c_str() );
+    log_d("get MQTT_PORT_KEY Config: %d\n", mqtt_conf->mqtt_port );
+    log_d("get MQTT_USERNAME_KEY Config: %s\n", mqtt_conf->mqtt_username.c_str());
+    log_d("get MQTT_PASSWORD_KEY Config: %s\n", mqtt_conf->mqtt_password.c_str());
+    log_d("get MQTT_TPOIC_KEY Config: %s\n", mqtt_conf->mqtt_topic_prefix.c_str());
+
+    return 0;
+}
+
+int nvs_set_mqtt_config(String host, uint16_t port, String username,
+                            String password, String topic_prefix)
+{
+    Preferences prefs;    
+    prefs.begin(MQTT_CONFIG); 
     prefs.putString(MQTT_HOST_KEY, host);
     prefs.putUInt(MQTT_PORT_KEY, port);
     prefs.putString(MQTT_USERNAME_KEY, username);
     prefs.putString(MQTT_PASSWORD_KEY, password);
-    prefs.putString(MQTT_TPOIC_KEY, topic);
+    prefs.putString(MQTT_TPOIC_PREFIX_KEY, topic_prefix);
     prefs.end();
-    ncv_config.mqtt_host = host;
-    ncv_config.mqtt_port = port;
-    ncv_config.mqtt_username = username;
-    ncv_config.mqtt_password = password;
-    ncv_config.mqtt_topic = topic;
+
 
     log_d("set MQTT_HOST_KEY Config: %s\n", host.c_str() );
     log_d("set MQTT_PORT_KEY Config: %d\n", port );
     log_d("set MQTT_USERNAME_KEY Config: %s\n", username.c_str() );
     log_d("set MQTT_PASSWORD_KEY Config: %s\n", password.c_str() );
     log_d("set MQTT_TPOIC_KEY Config: %s\n", topic.c_str() );
+
+    return 0;
 }
 
 void set_imu_config(float gyroXoffset, float gyroYoffset, float gyroZoffset)

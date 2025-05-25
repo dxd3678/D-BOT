@@ -1,4 +1,3 @@
-
 #include "hal/hal.h"
 
 #if XK_MQTT
@@ -12,7 +11,12 @@
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
 int mqtt_last_connect_time = 0;
+const char *g_topic_prefix = "dingmos";
 
+const char *HAL::mqtt_get_topic_frefix(void)
+{
+    return g_topic_prefix;
+}
 
 int HAL::setup_wifi(void) 
 {
@@ -42,20 +46,26 @@ int HAL::setup_wifi(void)
    return 0;
 }
 
-void mqttCallback(char *topic, byte *payload, unsigned int length) {
+void mqttCallback(char *topic, byte *payload, unsigned int length)
+{
     char buf[256];
     snprintf(buf, sizeof(buf), "Received mqtt callback for topic %s, length %u", topic, length);
     Serial.printf(buf);
 }
 
-void connectMQTT() {
-    String password,host,username,topic;
-    uint16_t port;
-    get_mqtt_config(host,port,username,password,topic);
-    const char *mqtt_user = username.c_str();  
-    const char *mqtt_pass = password.c_str();
+void connectMQTT(void)
+{
+    String macAddress = WiFi.macAddress();
+    macAddress.replace(":", "");
+    String id = "DBOT_" + macAddress.substring(macAddress.length() - 6);
     bool result;
-    Serial.println("Attempting MQTT connection...");
+
+    struct mqtt_config conf;
+    if (nvs_get_mqtt_config(&conf)) {
+        return;
+    }
+
+    log_i("Attempting MQTT connection...id %s", id.c_str());
 
     if (WiFi.status() != WL_CONNECTED) {
         if (HAL::setup_wifi()) {
@@ -63,11 +73,12 @@ void connectMQTT() {
         }
     }
 
-    if(password.length() > 0){
-        result = mqtt_client.connect(mqtt_user, mqtt_user, mqtt_pass);
-    } else {
-        result = mqtt_client.connect(mqtt_user);
-    }
+    // if(conf.mqtt_password.length() > 0){
+    //     result = mqtt_client.connect(id.c_str(), conf.mqtt_username.c_str(),
+    //                                          conf.mqtt_password.c_str());
+    // } else {
+    result = mqtt_client.connect(id.c_str());
+    // }
 
     if (!result) {
         printf("MQTT failed rc=%d will try again in 5 seconds\n", mqtt_client.state());
@@ -107,22 +118,27 @@ int HAL::mqtt_publish(const char *topic, const char *playload)
     }
     return ret;
 }
+#define MQTT_SIZE  50
 
-char mqtt_host[50];
 
 void HAL::mqtt_init(void) {
-    String password,host,username,topic;
-    uint16_t port;
-
+    struct mqtt_config conf;
+    static char mqtt_host[MQTT_SIZE];
     if (WiFi.status() != WL_CONNECTED) {
         setup_wifi();
     }
-    
-    get_mqtt_config(host,port,username,password,topic);
-    sprintf(mqtt_host, "%s" , host.c_str());
-    log_d("MQTT connect host |%s|:|%d|\n" , mqtt_host , port );
-    mqtt_client.setServer(mqtt_host, port);
 
+    if (nvs_get_mqtt_config(&conf)) {
+        log_e("no mqtt conf");
+        return;
+    }
+
+    g_topic_prefix = strdup(conf.mqtt_topic_prefix.c_str());
+    
+    log_i("MQTT connect host |%s|:|%d|\n", conf.mqtt_host.c_str(), conf.mqtt_port);
+    snprintf(mqtt_host, MQTT_SIZE, conf.mqtt_host.c_str());
+
+    mqtt_client.setServer(mqtt_host, conf.mqtt_port);
     mqtt_client.setCallback(mqttCallback);
     xTaskCreatePinnedToCore(
         TaskMqttUpdate,

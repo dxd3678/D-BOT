@@ -33,7 +33,7 @@ void HassView::SetCtrView(lv_obj_t* obj)
 		PlaygroundView::OnOffView();
 		current_view = VIEW_MODE_ON_OFF;
 	}
-	printf("set view: %d\n",current_view);
+
 	lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
 }
 /*
