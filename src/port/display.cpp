@@ -6,7 +6,8 @@
 TaskHandle_t handleTaskLvgl;
 void TaskLvglUpdate(void* parameter)
 {
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    log_i("Running on Core: %d\n", xPortGetCoreID());
     for (;;)
     {
         lv_task_handler();

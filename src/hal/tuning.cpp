@@ -103,9 +103,9 @@ int HAL::wireless_tuning_init(void)
     add_tuning_cmd('C', on_store_parameter, 
                 const_cast<char*>("store all wirelss tuning parameter"));
 
-    log_system(SYSTEM_INFO, "getting parameter from nvs...");
+    // log_system(SYSTEM_INFO, "getting parameter from nvs...");
     if (ctrl_restore_parameter()) {
-        log_system(SYSTEM_ERR, "failed to get pid parameter from nvs, using default.");
+        log_system(SYSTEM_ERR, "using default pid parameter.");
     }
     ret = xTaskCreatePinnedToCore(
                 wl_tuning_task,

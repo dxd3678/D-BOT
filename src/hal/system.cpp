@@ -83,14 +83,21 @@ void HAL::log_system(int level, const char *fmt, ...)
 
 int HAL::system_ui_init(void) 
 {
-    lv_obj_t *screen = lv_scr_act();
+    lv_obj_t *screen = lv_obj_create(lv_scr_act());
+    // lv_obj_remove_style_all(screen);
+    // lv_obj_set_size(screen, LV_HOR_RES, LV_VER_RES);
+    //lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
+    //  lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
 
-    lv_obj_set_style_bg_color(screen, lv_color_black(), LV_PART_MAIN);
+    lv_obj_remove_style_all(screen);
+	lv_obj_set_size(screen, LV_HOR_RES, LV_VER_RES);
+	lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
+	lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
 
     g_log_area = lv_textarea_create(screen);
     lv_obj_set_size(g_log_area, CONFIG_SCREEN_HOR_RES - 40 , CONFIG_SCREEN_VER_RES - 90);
     lv_obj_align(g_log_area, LV_ALIGN_CENTER, 0, 0);
-
+    lv_obj_clear_flag(g_log_area, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(g_log_area, LV_OPA_0, LV_PART_MAIN);
     lv_obj_set_style_text_color(g_log_area, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_border_width(g_log_area, 0, LV_PART_MAIN);
@@ -101,8 +108,10 @@ int HAL::system_ui_init(void)
 
 int HAL::system_ui_uninit()
 {
+
     // lv_obj_clean(lv_scr_act());
-    // lv_textarea_set_text(g_log_area, "");
-    g_log_area = NULL;
+    lv_textarea_set_text(g_log_area, "");
+    // lv_obj_del(g_log_area);
+    // g_log_area = NULL;
     return 0;
 }

@@ -764,7 +764,7 @@ void HAL::motor_init(void)
         nullptr,
         2,
         &handleTaskMotor,
-        ESP32_RUNNING_CORE);
+        MOTOR_RUNNING_CORE);
     if (ret != pdPASS) {
         log_e("start motor_run task failed.");
         // return -1;
