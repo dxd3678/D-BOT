@@ -26,6 +26,9 @@ void config_mode_cb(WiFiManager *wifi_manager)
     log_i("%s", WiFi.softAPIP().toString().c_str());
 
     log_i("请连接 WiFi %s 进行配置", wifi_manager->getConfigPortalSSID().c_str());
+    HAL::log_system(SYSTEM_INFO, "connect WiFi: \n%s \naccess: %s", 
+                    wifi_manager->getConfigPortalSSID().c_str(),
+                    WiFi.softAPIP().toString().c_str());
 }
 
 static void save_mqtt_config(void)
@@ -46,6 +49,7 @@ void save_config_cb()
 
     save_mqtt_config();
 
+    HAL::log_system(SYSTEM_WARN, "system reboot...");
     log_i("配置已保存，准备重启");
     ESP.restart();
 }
