@@ -2,11 +2,13 @@
 #include "hal.h"
 #include "lvgl.h"
 #include "sd_card.h"
+#include "app/ota/ota.h"
 
 #define DISP_BUF_SIZE        CONFIG_SCREEN_BUFFER_SIZE
 
 extern lv_color_t* disp_draw_buf;
 SdCard tf;
+Ota ota;
 
 void display_init();
 
@@ -26,11 +28,13 @@ void HAL::Init()
     
     log_system(SYSTEM_INFO, "init audio...");
     audio_init();
-    delay(1000);
+    delay(500);
     log_system(SYSTEM_INFO, "init system...");
     system_init();
     log_system(SYSTEM_INFO, "init network...");
     network_init();
+    log_system(SYSTEM_INFO, "ota check...");
+    ota.CheckVersion();
 #ifdef XK_WIRELESS_PARAMETER
     log_system(SYSTEM_INFO, "init wireless tuning...");
     wireless_tuning_init();

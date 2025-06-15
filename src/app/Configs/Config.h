@@ -11,6 +11,7 @@
 
 #define CONFIG_WEIGHT_DEFAULT                 65 // kg
 
+#define CONFIG_OTA_URL                        "http://114.132.198.162:8002/xiaozhi/ota/"
 #define CONFIG_GPS_REFR_PERIOD                1000 // ms
 #define CONFIG_GPS_LNG_DEFAULT                116.391332
 #define CONFIG_GPS_LAT_DEFAULT                39.907415

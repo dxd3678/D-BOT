@@ -8,6 +8,7 @@
 #include "nvs.h"
 
 
+
 WiFiManager wm;
 
 // 参数名、标签、默认值、最大长度
@@ -44,7 +45,7 @@ void save_config_cb()
                     game_ctrlr_addr.getValue());
 
     save_mqtt_config();
-    
+
     log_i("配置已保存，准备重启");
     ESP.restart();
 }

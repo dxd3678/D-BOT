@@ -15,6 +15,7 @@
 #define MT6701_SS_0 GPIO_NUM_42
 
 #define MO_EN GPIO_NUM_35
+// #define MO_EN GPIO_NUM_40
 
 #define MO1_1 GPIO_NUM_7
 #define MO1_2 GPIO_NUM_15
