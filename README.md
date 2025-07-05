@@ -35,6 +35,8 @@ D-BOT 交流群：954041464
 
 已经上传到嘉立创开源平台：[硬件开源链接](https://oshwhub.com/dingmos/kbc)
 
+2025-06-21 D-BOT v1.0 版本正式量产了。V1 版本同样开源供大家学习和玩耍。有需要成品的同学可以在淘宝 [45 智造小店](https://item.taobao.com/item.htm?from=cart&id=938721301093&pisk=glTnbKOEQHSQ5jkOXF_I00qgPpiTOw_5ULUReaBrbOW6JXsRehfyedGSOwdPELvOCehC2TKgZI9MEgGCeTWkeQ-K6q3vOB_5zzDxkqee1nVXKJ5P4brNNsGOTHpy2tQ5zxHuXzSIoa9UVwh_4l5NC_fzLaJP7R55aa5FLklGQ_fb4JJyUffNO6PFT9Sz75W1tyyz8g7NQ_1lUWWeUClGZ_QPULSEsClNZkWvzn8ZB2llQKp1nFfhxtRiczzlprIF3nBazxRNtq62TO4zztXmIJOM9v4X6wTpnspK7yvDTnJy0dug-GtesUjXP0UpON6N0TR3Lk5c-9j28MFSMwsyjFbp8YZX6CXFmNKtfvIR-pxfhMosCLAGpL8hbJDOend98GvqBPv5qHJh_ZSyblr4t0U5_bLaVusF11XA7fKpSV19D9Gisod5Y11fHfcgVusF11XxsfqvPM51GtC..&skuId=5834152061817&spm=a1z0d.6639537%2F202410.item.d938721301093.2d457484kVIuBS) 购买。
+
 ### 3D 结构
 
 3D 结构的打印件已经上传到 Maker World ： [D-BOT 3D 模型](https://makerworld.com.cn/zh/models/1061527-d-bot-ge-ke-ai-kong-zhi-de-wu-shua-ping-heng-che-x#profileId-1100492)，总共包含 5 个打印件：
@@ -44,6 +46,8 @@ D-BOT 交流群：954041464
 - 电池卡扣+底座接口_v0.9
 - 屏幕架_v0.4
 - 支撑件_v0.1
+
+[硬件 V1 版本对应的结构件](https://makerworld.com.cn/zh/models/1344200-d-botxiang-mu-da-yin-jian-fen-bie-gua-pei-lu-he-ji#profileId-1450090)已更新。
 
 ## Getting Started
 
@@ -77,6 +81,8 @@ D-BOT 的 AI 控制代码开源在 [xiaozhi-esp32](https://github.com/SmallPond/
 - Movecall Moji 小智AI衍生版
 - 立创·实战派ESP32-S3开发板
 - 面包板
+
+MCP 服务器控制实现中...
 
 ## 手柄遥控
 
