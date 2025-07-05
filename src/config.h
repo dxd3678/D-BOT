@@ -14,9 +14,6 @@
 #define MO0_3 GPIO_NUM_6
 #define MT6701_SS_0 GPIO_NUM_42
 
-#define MO_EN GPIO_NUM_35
-// #define MO_EN GPIO_NUM_40
-
 #define MO1_1 GPIO_NUM_7
 #define MO1_2 GPIO_NUM_15
 #define MO1_3 GPIO_NUM_16
@@ -64,5 +61,12 @@
 #define CONFIG_MPU_SCL                38
 
 #define WIRELESS_TUNING_PORT      (4242)
+
+#ifdef D_BOT_HW_V1
+#define MO_EN                 GPIO_NUM_40
+#define CONFIG_RGB_PIN        GPIO_NUM_46
+#else
+#define MO_EN GPIO_NUM_35
+#endif
 
 #endif 
